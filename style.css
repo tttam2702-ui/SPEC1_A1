@@ -1,0 +1,75 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+main {
+  position: relative;
+  aspect-ratio: 16 / 9;
+}
+
+canvas {
+  display: block;
+  /* p5 sets inline dimensions; scale the view while retaining 1920 × 1080. */
+  width: 100% !important;
+  height: auto !important;
+  touch-action: none;
+}
+
+.claim-offer {
+  position: absolute;
+  z-index: 1;
+  top: 85.555556%;
+  left: 50%;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7vw;
+  width: 27.083333%;
+  height: 6.666667%;
+  padding: 0 2.2vw 0 3.25vw;
+  border: 1px solid #111111;
+  border-radius: 999px;
+  background: #FFFF00;
+  color: #FF0000;
+  box-shadow: 0 0.625vw 0 -1px #FF1A10, 0 0.625vw 0 0 #111111;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1.875vw;
+  font-style: italic;
+  font-weight: 900;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.claim-offer::before {
+  content: "";
+  position: absolute;
+  inset: -6px -3px;
+  border-radius: inherit;
+}
+
+.claim-offer svg {
+  flex: 0 0 auto;
+  width: 2.25vw;
+  height: 1.75vw;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3.4;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+}
+
+.claim-offer:focus-visible {
+  outline: 3px solid #08BEFF;
+  outline-offset: 6px;
+}
+
+.claim-offer:active {
+  transform: translate(-50%, 0.35vw);
+  box-shadow: 0 0.275vw 0 -1px #FF1A10, 0 0.275vw 0 0 #111111;
+}
