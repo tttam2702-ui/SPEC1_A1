@@ -14,6 +14,7 @@ const SOUND_PATHS = {
   transition: "sounds/transition.wav",
 };
 let aboutOpen = false;
+let soundReady = false;
 let projectSounds = {};
 let soundNames = [];
 
@@ -63,8 +64,7 @@ function soundMissing() {
 
 function playEffect(name, volume = 0.4) {
   let sound = projectSounds[name];
-  if (!sound || !sound.isLoaded()) return;
-  userStartAudio();
+  if (!soundReady || !sound || !sound.isLoaded()) return;
   sound.setVolume(volume);
   if (name === "notification") sound.stop();
   sound.play();
@@ -72,8 +72,7 @@ function playEffect(name, volume = 0.4) {
 
 function loopEffect(name, volume = 0.07) {
   let sound = projectSounds[name];
-  if (!sound || !sound.isLoaded() || sound.isPlaying()) return;
-  userStartAudio();
+  if (!soundReady || !sound || !sound.isLoaded() || sound.isPlaying()) return;
   sound.setVolume(volume);
   sound.loop();
 }
@@ -81,6 +80,16 @@ function loopEffect(name, volume = 0.07) {
 function stopSounds() {
   soundNames.forEach((name) => projectSounds[name].stop());
 }
+
+// Only a real input starts audio, so waiting on the landing page never queues pops.
+function enableSounds() {
+  if (soundReady) return;
+  userStartAudio();
+  soundReady = true;
+}
+
+window.addEventListener("pointerdown", enableSounds);
+window.addEventListener("keydown", enableSounds);
 
 // Navigation ends a page's sounds, including the quiet datamosh loop.
 window.addEventListener("pagehide", stopSounds);
