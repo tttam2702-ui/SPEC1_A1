@@ -18,7 +18,7 @@ Download the complete project. In a terminal, open this directory, beside `index
 python3 -m http.server 8000
 ```
 
-Visit **http://localhost:8000/index.html**. Use a modern desktop browser. Any ordinary static web server also works. No build step or Node.js is needed to run the artwork. Images, sounds and runtime libraries are included locally.
+Visit **http://localhost:8000/index.html**. Use a modern desktop browser. Any ordinary static web server also works. No build step or Node.js is needed to run the artwork. Images and sounds are included locally. An Internet connection is required for the version-pinned p5.js and p5.sound libraries loaded from jsDelivr; the project folder contains only one JavaScript file, `sketch.js`.
 
 Use the server instead of opening `index.html` with `file://`: the browser needs to load images and sounds. Sound begins after a visitor interacts with the page.
 
@@ -34,25 +34,30 @@ The offers are fictional. No purchase takes place. The ending contains moving gl
 
 ## Read the code
 
-The product movement, outfit changes, collection and warning signals use basic p5 drawing, conditions, loops, arrays and classes. Two dedicated modules retain the detailed tracking and datamosh effects. They use native Canvas 2D image processing beyond the topics shown in the class schedule. The project has two pages and uses no physics library.
+The product movement, outfit changes, collection and warning signals use basic p5 drawing, conditions, loops, arrays and classes. The `FrameArt` and `ChallengeDatamosh` sections retain the detailed tracking and datamosh effects. They use p5's `drawingContext` and native Canvas 2D image processing beyond the topics shown in the class schedule. The project has two pages and uses no physics library.
 
-| File                           | Purpose                                                                          |
-| ------------------------------ | -------------------------------------------------------------------------------- |
-| `common.js`                    | Shared screen size, sound and navigation helpers.                                |
-| `sketch.js`                    | Landing images, handmade movement, mouse dragging and the changing outfit.       |
-| `ambient-art.js`               | Detailed message sprites, image heatmaps, tracking boxes and connecting lines.   |
-| `challenge.js`                 | Falling items, the shopping cart, challenge stages and the warning-field ending. |
-| `challenge-signals.js`         | Randomly placed, moving hexagons, hazard stripes and multiplying signals.        |
-| `challenge-datamosh.js`        | Advanced pixel recolouring, image feedback and continuously melting regions.     |
-| `site-shell.js`                | Shared navigation, fullscreen and project credits.                               |
-| `style.css`                    | Fits the artwork into the browser window.                                        |
-| `index.html`, `challenge.html` | Load the local libraries and the correct page script.                            |
+All application code is in **`sketch.js`**. The two HTML pages load the same file. One set of p5 hooks (`preload`, `setup`, `draw` and input callbacks) checks `IS_CHALLENGE` and runs the appropriate scene. Shared navigation and About are created with p5 DOM helpers during `setup()`.
 
-Start with [LEARNING_GUIDE.md](LEARNING_GUIDE.md). It separates the class-level interaction code from the two advanced visual modules and explains how they connect. [AI_ASSISTANCE.md](AI_ASSISTANCE.md) explains the AI assistance and revisions openly.
+The numbered comments in `sketch.js` mark these sections:
+
+| Section                                | Purpose                                                            |
+| -------------------------------------- | ------------------------------------------------------------------ |
+| 1. Shared canvas and sound             | Screen size, palette, backgrounds and sound functions.             |
+| 2. p5 lifecycle and input              | Routes the p5 callbacks to landing or challenge.                   |
+| 3. Shared navigation and About         | Navigation, fullscreen and project credits.                        |
+| 4. Landing scene                       | Falling images, dragging, outfit, head and passing cart.           |
+| 5. Tracking and message artwork        | `FrameArt`: image tracking, bubbles and connecting lines.          |
+| 6. Challenge scene                     | Catching items, challenge stages and the return timer.             |
+| 7. Datamosh image feedback             | `ChallengeDatamosh`: the preserved melting engine.                 |
+| 8. Generative warning signs and alerts | Moving hexagons, click cues and scrolling ribbons.                 |
+| 9. Identity erasure                    | A human-shaped void, falling strips and bursts of image fragments. |
+
+`index.html` and `challenge.html` remain the browser entry points. The CSS files control page fitting and the HTML overlays. There are no other local `.js` files or inline JavaScript handlers.
+Start with [LEARNING_GUIDE.md](LEARNING_GUIDE.md). It separates the class-level interaction code from the two advanced visual sections and explains how they connect. [AI_ASSISTANCE.md](AI_ASSISTANCE.md) explains the AI assistance and revisions openly.
 
 ## The warning-field ending
 
-The original datamosh stays visible and keeps melting across the whole background. Red and black hexagons appear at random positions, with varied sizes and angles. Each signal moves toward new random points on its own rhythm; yellow hazard stripes and thin connecting lines move with them. The labels **MORE**, **AGAIN**, **ME?** and **NOT YET** connect the image to the pressure to keep buying a new identity. Every sign has a pulsing outline and a yellow **CLICK TO CHANGE** label. Hovering turns it yellow and holds it still for clicking. Two alert ribbons scroll in opposite directions above the scene. A touch breaks the image briefly, sends the touched area into the existing melt and creates more signs. The visible signals are capped at 32.
+The original datamosh stays visible and keeps melting across the whole background. A human-shaped empty space tears and breaks into falling strips in the middle. Red and black hexagons appear at random positions on either side, with varied sizes and angles. Each signal moves toward new random points on its own rhythm; yellow hazard stripes and thin connecting lines move with them. The labels **MORE**, **AGAIN**, **ME?** and **NOT YET** connect the image to the pressure to keep buying a new identity. Every sign has a pulsing outline and a yellow **CLICK TO CHANGE** label. Hovering turns it yellow and holds it still for clicking. Two alert ribbons scroll in opposite directions above the scene. A touch breaks the image briefly, sends the touched area into the existing melt, creates more signs and throws pieces of the current picture outward. Each click increases the distortion of the empty person. The figure is made from p5 shapes; no new illustration or external image was added. The visible signals are capped at 32 and image fragments at 80.
 
 ## Licences and credits
 

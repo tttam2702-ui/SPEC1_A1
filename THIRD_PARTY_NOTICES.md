@@ -1,13 +1,13 @@
 # Third-party code and references
 
-ME-MARRT application code is GPL-3.0-or-later. The libraries below keep their original copyright notices and licences. Their source is separate from the project's own scripts.
+ME-MARRT application code is GPL-3.0-or-later. The libraries below keep their original copyright notices and licences. The project's own code is in `sketch.js`; the libraries are loaded externally.
 
 ## Runtime libraries
 
-- **p5.js 1.11.11**, Processing Foundation and p5.js contributors. Local file: `p5.js`. Used for drawing, images and input. [Version source](https://github.com/processing/p5.js/tree/v1.11.11), [upstream licence](https://github.com/processing/p5.js/blob/v1.11.11/license.txt), [local LGPL 2.1 text](licenses/p5-LGPL-2.1.txt).
-- **p5.sound 1.0.1** (header dated 2021-05-25), the addon included with the p5.js 1.11.11 distribution. Local file: `p5.sound.js`. Used for loading, playing and stopping the supplied recordings. [Matching distribution](https://www.npmjs.com/package/p5/v/1.11.11), [upstream MIT licence](https://github.com/processing/p5.js-sound/blob/v1.0.1/LICENSE), [local MIT text](licenses/p5.sound-MIT.txt). Copyright © 2014–2015 The Processing Foundation. Its embedded version, copyright and dependency notices are retained.
+- **p5.js 1.11.11**, Processing Foundation and p5.js contributors. Loaded from [jsDelivr, pinned version](https://cdn.jsdelivr.net/npm/p5@1.11.11/lib/p5.min.js). Used for drawing, images and input. [Version source](https://github.com/processing/p5.js/tree/v1.11.11), [upstream licence](https://github.com/processing/p5.js/blob/v1.11.11/license.txt), [local LGPL 2.1 text](licenses/p5-LGPL-2.1.txt).
+- **p5.sound 1.0.1** (header dated 2021-05-25), the addon included with the p5.js 1.11.11 distribution. Loaded from the [same pinned distribution](https://cdn.jsdelivr.net/npm/p5@1.11.11/lib/addons/p5.sound.min.js). Used for loading, playing and stopping the supplied recordings. [Matching distribution](https://www.npmjs.com/package/p5/v/1.11.11), [upstream MIT licence](https://github.com/processing/p5.js-sound/blob/v1.0.1/LICENSE), [local MIT text](licenses/p5.sound-MIT.txt). Copyright © 2014–2015 The Processing Foundation. Its embedded version, copyright and dependency notices are retained.
 
-The local libraries are included so the artwork does not need a CDN. Embedded notices for dependencies bundled inside those libraries remain in their files. Matter.js and the old custom Web Audio scheduler are not used in this version.
+Internet access is required to load these libraries. They are not copied into the project folder, keeping `sketch.js` as its only JavaScript file. The full local licence texts remain in `licenses/`; embedded upstream dependency notices remain in the CDN distributions. Matter.js and the old custom Web Audio scheduler are not used in this version.
 
 ## Interaction and visual references
 

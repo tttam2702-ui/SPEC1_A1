@@ -1,6 +1,6 @@
 # Reading ME-MARRT step by step
 
-This guide links the scene interactions to the topics in the supplied class schedule. The schedule gives topic names; it does not show every function taught in class. The detailed tracking and datamosh modules go beyond those topics and are identified separately below.
+This guide links the scene interactions to the topics in the supplied class schedule. The schedule gives topic names; it does not show every function taught in class. The detailed tracking and datamosh sections go beyond those topics and are identified separately below.
 
 ## Start with the p5 order
 
@@ -9,7 +9,11 @@ This guide links the scene interactions to the topics in the supplied class sche
 3. **`draw()`** runs repeatedly. It updates positions, then draws the current picture.
 4. Mouse functions change the state when the visitor clicks or drags.
 
-Read the basic flow in `common.js`, `sketch.js` and `challenge.js` first. Read the advanced visual modules, `ambient-art.js` and `challenge-datamosh.js`, after that. `index.html` and `challenge.html` load those scripts; no code compiler is needed.
+All code is in **`sketch.js`**, with nine numbered section comments. Start with sections 1–4 and 6 for the basic scenes. Read the advanced `FrameArt` and `ChallengeDatamosh` classes in sections 5 and 7 afterwards. Section 8 contains the warnings and alert ribbons; section 9 draws the missing-person ending with p5 graphics, image slices and a small fragment class.
+
+`IS_CHALLENGE` checks whether the current HTML has the challenge stage. The single `preload()`, `setup()` and `draw()` callbacks use an `if` statement to call `preloadLanding()` / `preloadChallenge()`, `setupLanding()` / `setupChallenge()` and `drawLanding()` / `drawChallenge()`. The input callbacks use the same idea. Each page starts its own p5 sketch, so only that scene loads its images and sounds.
+
+Both HTML pages load the same `sketch.js` after the p5.js and p5.sound CDN libraries. No compiler is needed. Internet is required to load those libraries.
 
 ## Concepts used in the scene interactions
 
@@ -28,7 +32,7 @@ Read the basic flow in `common.js`, `sketch.js` and `challenge.js` first. Read t
 
 These are examples of how the schedule's ideas apply. They are not a claim that every possible array method or colour mode is necessary in this project.
 
-## Shared helpers: `common.js`
+## Shared helpers: section 1 of `sketch.js`
 
 - **`makeCanvas(label)`** creates the 1920 × 1080 drawing surface. CSS changes its display size, not its internal pixel size.
 - **`makeStoreBackground()`** draws the bright store background.
@@ -51,41 +55,43 @@ The p5.sound addon handles audio playback. `MeltBeatClock` reads its playhead so
 
 **Warning field:** `WarningSignal` stores each red hexagon's position, size, angle and word. A loop draws the signals in an array. `scatter()` chooses a random target; `update()` moves the position and angle a little toward it each frame. `hit()` checks the mouse against the hexagon. A click adds more signals, tears a few image strips and sends the touched area into the existing melting effect. Yellow stripes use rectangles and a loop. Hovering pauses a sign; its yellow label and pulsing outline make the interaction visible. `drawAlertTicker()` repeats a text string in a loop, using remainder (`%`) to wrap the scrolling position.
 
+**Identity erasure:** `createGraphics()` draws an empty human silhouette with an ellipse and polygon. A loop draws it as thin image strips. Clicking increases the strip offsets and falling distance; remainder (`%`) wraps the falling strips. `IdentityShard` gives captured pieces of the picture position, speed, rotation and a limited lifetime. The pieces are capped at 80.
+
 **Time:** `millis()` gives the time since the sketch started. Comparing it with a saved start time lets the artwork wait before returning to the store. It uses the same basic idea as comparing two numbers in an `if` statement.
 
 ## Find the landing code
 
-| Function or class                                                       | What to look for                                                                         |
-| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `resetLandingScene()` in `sketch.js`                                    | A loop creates products. `floor(random(3, 6))` creates 3, 4 or 5 barcodes.               |
-| `StoreItem.update()` and `StoreItem.keepInStage()`                      | Adds gravity and speed, then checks the rectangle's boundaries.                          |
-| `StoreItem.bounce()` and `StoreItem.avoidCircle()`                      | Checks overlapping products and keeps them outside the fixed yellow circle.              |
-| `mousePressed()`, `mouseDragged()` and `mouseReleased()` in `sketch.js` | Finds a product, follows mouse movement, then releases it.                               |
-| `changeOutfit()` and `drawHead()` in `sketch.js`                        | Chooses image numbers and creates a coloured polygon with a loop.                        |
-| `drawPassingCart()` in `sketch.js`                                      | Adds to the cart's horizontal position and uses `millis()` to wait before the next pass. |
+| Function or class                                        | What to look for                                                                         |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `resetLandingScene()` in `sketch.js`                     | A loop creates products. `floor(random(3, 6))` creates 3, 4 or 5 barcodes.               |
+| `StoreItem.update()` and `StoreItem.keepInStage()`       | Adds gravity and speed, then checks the rectangle's boundaries.                          |
+| `StoreItem.bounce()` and `StoreItem.avoidCircle()`       | Checks overlapping products and keeps them outside the fixed yellow circle.              |
+| `pressLanding()`, `dragLanding()` and `releaseLanding()` | Finds a product, follows mouse movement, then releases it.                               |
+| `changeOutfit()` and `drawHead()` in `sketch.js`         | Chooses image numbers and creates a coloured polygon with a loop.                        |
+| `drawPassingCart()` in `sketch.js`                       | Adds to the cart's horizontal position and uses `millis()` to wait before the next pass. |
 
 ## Find the challenge code
 
-| Function or class in `challenge.js`                                            | What to look for                                                                                               |
+| Function or class in section 6 of `sketch.js`                                  | What to look for                                                                                               |
 | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| `mousePressed()` → `catchAt()` → `catchProduct()`                              | Tests the mouse position, changes the clicked product, increments `collected` and plays the item sound.        |
+| `mousePressed()` → `pressChallenge()` → `catchAt()` → `catchProduct()`         | Tests the mouse position, changes the clicked product, increments `collected` and plays the item sound.        |
 | `Product.update()` and `Product.show()`                                        | Adds speed to position, or moves a caught item toward the cart; then draws its shape.                          |
 | `drawShirt()`, `drawBook()`, `drawBottle()`, `drawHeadphones()`, `drawPlant()` | Builds products from p5 shapes and coordinates.                                                                |
 | `drawWords()`                                                                  | Updates a small label's position and upward/downward speed inside a loop.                                      |
-| `WarningSignal.show()` and `WarningSignal.hit()` in `challenge-signals.js`     | Draws a hexagon and checks whether the mouse touches its shape.                                                |
+| `WarningSignal.show()` and `WarningSignal.hit()` in section 8                  | Draws a hexagon and checks whether the mouse touches its shape.                                                |
 | `activateSignal()` and `beginReturn()`                                         | Saves a deadline using `millis()`: 12 seconds after the first signal is touched, then a 1.9-second transition. |
 
-## Advanced visual modules
+## Advanced visual sections
 
 These are additional techniques used to keep the detailed visual effects. They should be described as extensions, rather than claiming every line comes from the class topics.
 
-| Module and method                                                            | What it adds                                                                                                    |
-| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `FrameArt.heatmapFor()` and `FrameArt.colorizeHeatmap()` in `ambient-art.js` | Reads image pixels and maps brightness to bright colours. A cache avoids repeating that pixel work every frame. |
-| `FrameArt.trackImage()` and `FrameArt.drawTrackingLinks()`                   | Samples patches from the products, draws jittering tracking boxes and joins points into a web.                  |
-| `FrameArt.drawMessages()` and `FrameArt.glitchMessage()`                     | Draws cached bubble images and splits them into offset strips when dismissed.                                   |
-| `ChallengeDatamosh.prepareTexture()` in `challenge-datamosh.js`              | Builds the colourful source texture by changing pixel channels.                                                 |
-| `ChallengeDatamosh.addDamage()` and `ChallengeDatamosh.draw()`               | Adds damage at a clicked position, then keeps transporting fragments and stretching melting ribbons.            |
+| Class and method                                                      | What it adds                                                                                                    |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `FrameArt.heatmapFor()` and `FrameArt.colorizeHeatmap()` in section 5 | Reads image pixels and maps brightness to bright colours. A cache avoids repeating that pixel work every frame. |
+| `FrameArt.trackImage()` and `FrameArt.drawTrackingLinks()`            | Samples patches from the products, draws jittering tracking boxes and joins points into a web.                  |
+| `FrameArt.drawMessages()` and `FrameArt.glitchMessage()`              | Draws cached bubble images and splits them into offset strips when dismissed.                                   |
+| `ChallengeDatamosh.prepareTexture()` in section 7                     | Builds the colourful source texture by changing pixel channels.                                                 |
+| `ChallengeDatamosh.addDamage()` and `ChallengeDatamosh.draw()`        | Adds damage at a clicked position, then keeps transporting fragments and stretching melting ribbons.            |
 
 The advanced code uses the browser's Canvas 2D API, including `drawImage()`, pixel data, hidden canvases and clipping. It also uses image caches and extra data structures. These are browser capabilities, so they add no separate runtime library.
 
@@ -93,4 +99,4 @@ The advanced code uses the browser's Canvas 2D API, including `drawImage()`, pix
 
 A useful explanation is: **“The visitor clicks an item. An `if` statement checks the mouse position. The item changes state, a sound plays, and `draw()` shows its new position.”**
 
-Follow the `mousePressed()` → `catchAt()` → `catchProduct()` path before presenting. AI assistance and the revisions are recorded in [AI_ASSISTANCE.md](AI_ASSISTANCE.md); this guide is for understanding the code, not hiding how it was made.
+Follow the `mousePressed()` → `pressChallenge()` → `catchAt()` → `catchProduct()` path before presenting. AI assistance and the revisions are recorded in [AI_ASSISTANCE.md](AI_ASSISTANCE.md); this guide is for understanding the code, not hiding how it was made.
