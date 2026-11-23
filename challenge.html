@@ -1,29 +1,44 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Challenge — ME-MARRT</title>
     <script src="p5.js"></script>
-    <script src="challenge-model.js?v=3"></script>
-    <script src="challenge-datamosh.js?v=4"></script>
-    <script src="challenge-audio.js?v=5"></script>
-    <script src="challenge-notifications.js?v=4"></script>
-    <script src="challenge-return.js?v=2"></script>
-    <link rel="stylesheet" href="style.css?v=claim-offer-3" />
-    <link rel="stylesheet" href="site-shell.css?v=2" />
-    <link rel="stylesheet" href="challenge.css?v=3" />
-    <link rel="stylesheet" href="challenge-notifications.css?v=3" />
-    <link rel="stylesheet" href="challenge-return.css?v=1" />
-    <script src="site-shell.js?v=3" defer></script>
+    <script src="challenge-model.js?v=academic-1"></script>
+    <script src="challenge-datamosh.js?v=academic-1"></script>
+    <script src="challenge-audio.js?v=academic-1"></script>
+    <script src="challenge-notifications.js?v=academic-1"></script>
+    <script src="challenge-return.js?v=academic-1"></script>
+    <link rel="stylesheet" href="style.css?v=academic-1" />
+    <link rel="stylesheet" href="site-shell.css?v=academic-1" />
+    <link rel="stylesheet" href="challenge.css?v=academic-1" />
+    <link rel="stylesheet" href="challenge-notifications.css?v=academic-1" />
+    <link rel="stylesheet" href="challenge-return.css?v=academic-1" />
+    <script src="site-shell.js?v=academic-1" defer></script>
   </head>
   <body>
     <main class="challenge-stage" id="challenge-stage" data-site-stage>
       <div class="challenge-top">
-        <div><p>TODAY'S CHALLENGE</p><h1>FIX YOURSELF.</h1><span id="challenge-mode">CATCH THE NEXT YOU.</span></div>
-        <div class="challenge-score"><p>IN YOUR CART</p><output id="challenge-count" aria-live="polite">00</output><span id="challenge-time" aria-hidden="true">0.0s</span></div>
+        <div>
+          <p>TODAY'S CHALLENGE</p>
+          <h1>FIX YOURSELF.</h1>
+          <span id="challenge-mode">CATCH THE NEXT YOU.</span>
+        </div>
+        <div class="challenge-score">
+          <p>IN YOUR CART</p>
+          <output id="challenge-count" aria-live="polite">00</output
+          ><span id="challenge-time" aria-hidden="true">0.0s</span>
+        </div>
       </div>
-      <button class="challenge-melt" id="challenge-melt" type="button" aria-label="Glitch and melt another area of the image" hidden></button>
+      <button
+        class="challenge-melt"
+        id="challenge-melt"
+        type="button"
+        aria-label="Glitch and melt another area of the image"
+        hidden
+      ></button>
       <div class="challenge-targets" id="challenge-targets" aria-label="Falling objects"></div>
       <p class="challenge-art-status" id="challenge-art-status" role="status"></p>
       <p class="challenge-offer" id="challenge-offer" hidden></p>
@@ -37,17 +52,30 @@
           <h2 id="challenge-intro-title" tabindex="-1" autofocus>FIX YOURSELF.</h2>
           <p class="challenge-intro-lead">Catch the things that promise a better you.</p>
           <ol>
-            <li><strong>CLICK</strong> the falling objects. They change colour and fly into your cart.</li>
+            <li>
+              <strong>CLICK</strong> the falling objects. They change colour and fly into your cart.
+            </li>
             <li><strong>MOVE FAST.</strong> Every catch sends little labels bouncing out.</li>
-            <li><strong>WATCH IT MELT.</strong> After 5–6 catches, every click tears a new area of the picture. Keep clicking around the screen.</li>
-            <li><strong>CLICK OK.</strong> When the image breaks down, messages appear. Trying to fix them creates more, until the store calls you back.</li>
+            <li>
+              <strong>WATCH IT MELT.</strong> After 5–6 catches, every click tears a new area of the
+              picture. Keep clicking around the screen.
+            </li>
+            <li>
+              <strong>CLICK OK.</strong> When the image breaks down, messages appear. Trying to fix
+              them creates more, until the store calls you back.
+            </li>
           </ol>
-          <p class="challenge-disclaimer">An interactive artwork about shopping and self-improvement. Offers are fictional. PAUSE and RESTART are available while collecting.</p>
-          <button class="challenge-start" id="challenge-start" type="button" disabled>LOADING CART…</button>
+          <p class="challenge-disclaimer">
+            An interactive artwork about shopping and self-improvement. Offers are fictional. PAUSE
+            and RESTART are available while collecting.
+          </p>
+          <button class="challenge-start" id="challenge-start" type="button" disabled>
+            LOADING CART…
+          </button>
           <a class="challenge-exit" href="offer.html">← Back to offers</a>
         </div>
       </dialog>
     </main>
-    <script src="challenge.js?v=9"></script>
+    <script src="challenge.js?v=academic-1"></script>
   </body>
 </html>

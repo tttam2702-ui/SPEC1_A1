@@ -1,0 +1,16 @@
+{
+  "name": "me-marrt-experiment",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A 1920 x 1080 interactive artwork about consumption and identity",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "check": "node scripts/check-code.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "acorn": "8.15.0",
+    "prettier": "3.6.2"
+  }
+}

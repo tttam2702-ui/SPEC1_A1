@@ -1,0 +1,18 @@
+# Third-party code and references
+
+The project's application code is GPL-3.0-or-later. The following libraries and development tools keep their upstream licences and copyright notices.
+
+| Component            | Local file / use                                                                                                   | Original source                                                                                                                                                                   | Licence copy                                                             |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| p5.js **2.3.4**      | `p5.js`; canvas drawing and input on all three pages                                                               | [Processing Foundation / p5.js v2.3.4](https://github.com/processing/p5.js/tree/v2.3.4), [upstream licence](https://github.com/processing/p5.js/blob/v2.3.4/license.txt)          | [LGPL 2.1](licenses/p5-LGPL-2.1.txt)                                     |
+| Matter.js **0.19.0** | `vendor/matter.min.js`; landing-page rigid-body physics. `vendor/matter.js` provides the readable upstream source. | [Liam Brummitt and contributors / Matter.js 0.19.0](https://github.com/liabru/matter-js/tree/0.19.0), [upstream licence](https://github.com/liabru/matter-js/blob/0.19.0/LICENSE) | [MIT](licenses/matter-MIT.txt), also retained in `vendor/matter-LICENSE` |
+| Acorn **8.15.0**     | Optional development-only JavaScript parser in `scripts/check-code.mjs`                                            | [Acorn contributors](https://github.com/acornjs/acorn/tree/8.15.0)                                                                                                                | [MIT](licenses/acorn-MIT.txt)                                            |
+| Prettier **3.6.2**   | Optional development-only formatter                                                                                | [Prettier contributors](https://github.com/prettier/prettier/tree/3.6.2)                                                                                                          | [MIT](licenses/prettier-MIT.txt)                                         |
+
+The runtime libraries are distributed without project-specific edits. Existing embedded notices in the readable p5.js distribution are retained, including notices for its bundled dependencies. Their code is not represented as original ME-MARRT application code. The source links identify the corresponding upstream versions. No external CDN is required to run the experiment.
+
+## Interaction inspiration
+
+The author supplied [Giang Nguyen's gravity-fall experiment](https://giangnguyenday.github.io/oart1033-a2-s4135042/) as a reference for the landing objects' gravity, bounce and dragging feel. The application uses Matter.js for those mechanics; the local scene, object arrangement, audio, messages, wheel and challenge logic are in the project scripts. The reference is credited as interaction inspiration, and is not bundled as a separately licensed library.
+
+Other visual references were supplied in the project conversation for the outfit collage, message bubbles, tracking boxes, wheel typography and datamosh appearance. These references are not shipped as image assets in this repository.

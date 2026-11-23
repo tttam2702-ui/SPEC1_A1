@@ -1,11 +1,27 @@
-html, body {
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+html,
+body {
   margin: 0;
   padding: 0;
 }
 
+/* Keep the complete 1920 x 1080 composition visible at any window size. */
+body {
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+
 main {
   position: relative;
+  flex: 0 0 auto;
+  width: min(100vw, calc((100dvh - var(--site-bar-height, 44px)) * 16 / 9));
+  margin: auto;
   aspect-ratio: 16 / 9;
+  container-type: inline-size;
 }
 
 canvas {
@@ -26,17 +42,19 @@ canvas {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.7vw;
+  gap: 0.7cqw;
   width: 27.083333%;
   height: 6.666667%;
-  padding: 0 2.2vw 0 3.25vw;
+  padding: 0 2.2cqw 0 3.25cqw;
   border: 1px solid #111111;
   border-radius: 999px;
-  background: #FFFF00;
-  color: #FF0000;
-  box-shadow: 0 0.625vw 0 -1px #FF1A10, 0 0.625vw 0 0 #111111;
+  background: #ffff00;
+  color: #ff0000;
+  box-shadow:
+    0 0.625cqw 0 -1px #ff1a10,
+    0 0.625cqw 0 0 #111111;
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 1.875vw;
+  font-size: 1.875cqw;
   font-style: italic;
   font-weight: 900;
   line-height: 1;
@@ -55,8 +73,8 @@ canvas {
 
 .claim-offer svg {
   flex: 0 0 auto;
-  width: 2.25vw;
-  height: 1.75vw;
+  width: 2.25cqw;
+  height: 1.75cqw;
   fill: none;
   stroke: currentColor;
   stroke-width: 3.4;
@@ -65,11 +83,13 @@ canvas {
 }
 
 .claim-offer:focus-visible {
-  outline: 3px solid #08BEFF;
+  outline: 3px solid #08beff;
   outline-offset: 6px;
 }
 
 .claim-offer:active {
-  transform: translate(-50%, 0.35vw);
-  box-shadow: 0 0.275vw 0 -1px #FF1A10, 0 0.275vw 0 0 #111111;
+  transform: translate(-50%, 0.35cqw);
+  box-shadow:
+    0 0.275cqw 0 -1px #ff1a10,
+    0 0.275cqw 0 0 #111111;
 }
