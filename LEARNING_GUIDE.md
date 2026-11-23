@@ -19,7 +19,7 @@ Read the basic flow in `common.js`, `sketch.js` and `challenge.js` first. Read t
 | Boolean values, equality and `if`/`else`   | Conditions decide whether an object hit an edge, the mouse is over an item, or the challenge should change stage.                                                                                      |
 | Random numbers, rounding and array indices | Random numbers choose clothing variants. A random array selection picks a colour or phrase. p5's `floor()` rounds a number down, like JavaScript's `Math.floor()`, so it can identify one array entry. |
 | Incrementing and loops                     | A loop draws every item or several glitch strips. Adding speed to position moves an object a little each frame.                                                                                        |
-| Arrays                                     | Lists hold falling products, messages and printed receipts. Adding another entry lets the program create more of them.                                                                                 |
+| Arrays                                     | Lists hold falling products, messages and warning signals. Adding another entry lets the program create more of them.                                                                                  |
 | Functions                                  | Named steps such as drawing, moving or playing a sound keep repeated code in one place.                                                                                                                |
 | Objects, classes, properties and methods   | One item stores its own position, size and speed. Its methods update or draw that item. A class creates several items with the same structure.                                                         |
 | Drawing and colour                         | `rect()`, `ellipse()`, `line()`, shapes and text make the interface. Fill and stroke colours use the project's bright palette.                                                                         |
@@ -49,7 +49,7 @@ The p5.sound addon handles audio playback. `MeltBeatClock` reads its playhead so
 
 **Melting:** `ChallengeDatamosh` keeps copies of the picture on hidden canvases. It recolours pixels, moves small fragments and stretches strips downward. The next frame reuses the damaged picture, so the melt keeps building. This advanced image effect simulates datamoshing; it does not corrupt a video file.
 
-**Printed receipts:** each caught object adds a row and catch interval to the `basket` array. `Receipt` draws a paper slip, barcode and total time. Extra slips form a stack; **PRINT ANOTHER ME** creates another copy and melts the stamped paper into the background.
+**Warning room:** `WarningSignal` stores each red hexagon's position, size, angle and word. A loop draws the signals in an array. `hit()` checks the mouse against the hexagon. A click adds more signals, tears a few image strips and sends the touched area into the existing melting effect. Yellow stripes use rectangles and a loop.
 
 **Time:** `millis()` gives the time since the sketch started. Comparing it with a saved start time lets the artwork wait before returning to the store. It uses the same basic idea as comparing two numbers in an `if` statement.
 
@@ -66,14 +66,14 @@ The p5.sound addon handles audio playback. `MeltBeatClock` reads its playhead so
 
 ## Find the challenge code
 
-| Function or class in `challenge.js`                                            | What to look for                                                                                        |
-| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| `mousePressed()` → `catchAt()` → `catchProduct()`                              | Tests the mouse position, changes the clicked product, increments `collected` and plays the item sound. |
-| `Product.update()` and `Product.show()`                                        | Adds speed to position, or moves a caught item toward the cart; then draws its shape.                   |
-| `drawShirt()`, `drawBook()`, `drawBottle()`, `drawHeadphones()`, `drawPlant()` | Builds products from p5 shapes and coordinates.                                                         |
-| `drawWords()`                                                                  | Updates a small label's position and upward/downward speed inside a loop.                               |
-| `Receipt.show()` and `Receipt.hit()` in `challenge-receipts.js`                | Draws the custom receipt and checks its print button.                                                   |
-| `printAnotherMe()` and `beginReturn()`                                         | Saves a deadline using `millis()`: 12 seconds after the first print, then a 1.9-second transition.      |
+| Function or class in `challenge.js`                                            | What to look for                                                                                               |
+| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `mousePressed()` → `catchAt()` → `catchProduct()`                              | Tests the mouse position, changes the clicked product, increments `collected` and plays the item sound.        |
+| `Product.update()` and `Product.show()`                                        | Adds speed to position, or moves a caught item toward the cart; then draws its shape.                          |
+| `drawShirt()`, `drawBook()`, `drawBottle()`, `drawHeadphones()`, `drawPlant()` | Builds products from p5 shapes and coordinates.                                                                |
+| `drawWords()`                                                                  | Updates a small label's position and upward/downward speed inside a loop.                                      |
+| `WarningSignal.show()` and `WarningSignal.hit()` in `challenge-signals.js`     | Draws a hexagon and checks whether the mouse touches its shape.                                                |
+| `activateSignal()` and `beginReturn()`                                         | Saves a deadline using `millis()`: 12 seconds after the first signal is touched, then a 1.9-second transition. |
 
 ## Advanced visual modules
 

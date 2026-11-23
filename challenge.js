@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // AI-assisted artwork, rewritten with basic p5 drawing, arrays, loops and classes.
-// The final receipt turns the collected products and elapsed time into the artwork's bill.
+// The ending becomes a room of multiplying identity signals, not a computer error dialog.
 let cartImage, storeBackground, meltPicture, meltSource;
 let datamosh = null;
 let products = [],
   words = [],
-  receipts = [];
+  signals = [];
 let state = "intro",
   paused = false,
   collected = 0,
   meltClicks = 0;
-let receiptFrame = 0,
-  receiptBeat = 0,
-  receiptNumber = 0;
-let basket = [];
-let sessionStartedAt = 0,
-  lastCatchAt = 0;
+let signalFrame = 0,
+  signalBeat = 0,
+  signalNumber = 0;
+let signalStartedAt = 0,
+  signalGlitchUntil = 0;
+let signalTexture, signalBaseCount;
 let returnAt = 0,
   returnEnd = 0;
-const RECEIPT_BEATS = [3, 27, 41, 54, 67];
+const SIGNAL_BEATS = [3, 27, 41, 54, 67];
 // The original recording's attacks drive the restored melting engine.
 const MELT_BEATS = [
   0.025, 0.299, 0.586, 0.874, 1.161, 1.442, 1.729, 2.015, 2.302, 2.589, 2.876, 3.157, 3.444, 3.729,
@@ -44,7 +44,7 @@ function preload() {
 
 function setup() {
   const canvas = makeCanvas(
-    "Falling products, a melting shopping cart and a receipt for your time",
+    "Falling products, a melting shopping cart and an abstract identity warning room",
   );
   canvas.elt.tabIndex = 0;
   storeBackground = makeStoreBackground(false);
@@ -61,16 +61,14 @@ function setup() {
 function draw() {
   if (aboutOpen || paused) return;
   if (state === "intro" || state === "collect") drawShopping();
-  if (state === "melt" || state === "receipts") drawMelting();
-  if (state === "receipts") drawReceipts();
+  if (state === "melt" || state === "signals") drawMelting();
+  if (state === "signals") drawSignals();
   if (state === "return") drawReturn();
   updateHud();
 }
 
 function startChallenge() {
   state = "collect";
-  sessionStartedAt = lastCatchAt = millis();
-  basket = [];
   document.getElementById("challenge-intro").hidden = true;
   document.getElementById("challenge-pause").disabled = false;
   document.getElementById("challenge-restart").disabled = false;
@@ -93,7 +91,7 @@ function restartChallenge() {
   words = [];
   datamosh = null;
   meltSource = null;
-  receipts = [];
+  signals = [];
   collected = 0;
   meltClicks = 0;
   paused = false;
@@ -122,7 +120,7 @@ function mousePressed(event) {
   if (aboutOpen || paused || mouseX < 0 || mouseX > W || mouseY < 0 || mouseY > H) return;
   if (state === "collect") catchAt(mouseX, mouseY);
   else if (state === "melt") meltAt(mouseX, mouseY);
-  else if (state === "receipts") printAnotherMe(mouseX, mouseY);
+  else if (state === "signals") activateSignal(mouseX, mouseY);
 }
 
 function keyPressed(event) {
@@ -130,7 +128,7 @@ function keyPressed(event) {
   if (event && (event.repeat || ["BUTTON", "A"].includes(event.target.tagName))) return;
   if (state === "collect") catchLowest();
   else if (state === "melt") meltAt(random(100, W - 100), random(100, H - 100));
-  else if (state === "receipts") printAnotherMe();
+  else if (state === "signals") activateSignal();
   return false;
 }
 
@@ -159,8 +157,6 @@ function catchProduct(product) {
   product.targetY = random(430, 720);
   addWord(PRODUCT_NAMES[product.kind], product.x, product.y);
   addWord("BETTER YOU?", product.x + 70, product.y + 45);
-  basket.push({ kind: product.kind, seconds: (millis() - lastCatchAt) / 1000 });
-  lastCatchAt = millis();
   collected++;
   playEffect("item", 0.3);
   if (collected === 6) beginMelt(product.x, product.y);
@@ -209,16 +205,20 @@ function drawMelting() {
   datamosh.audioTrack.tick(min(deltaTime / 1000, 0.05));
   datamosh.draw(drawingContext, min(deltaTime / 1000, 0.05), meltSource);
   drawWords();
-  if (state === "melt" && datamosh.complete) beginReceipts();
+  if (state === "melt" && datamosh.complete) beginSignals();
 }
 
-function beginReceipts() {
-  state = "receipts";
+function beginSignals() {
+  state = "signals";
   document.getElementById("challenge-stage").classList.add("is-art-ending");
-  receipts = [];
-  receiptNumber = 0;
-  issueReceipt();
-  replayReceipts();
+  signalTexture = get();
+  signalStartedAt = millis();
+  signalNumber = 0;
+  buildSignalRoom();
+  replaySignals();
+  setStatus(
+    "Touch a red signal, or press Enter. Every attempt to change yourself creates more signals.",
+  );
 }
 
 // Adapt p5.sound's playhead to the old visual engine's looping beat clock.
@@ -248,69 +248,52 @@ class MeltBeatClock {
   }
 }
 
-function replayReceipts() {
-  receiptFrame = frameCount;
-  receiptBeat = 0;
+function replaySignals() {
+  signalFrame = frameCount;
+  signalBeat = 0;
   playEffect("notification", 0.35);
 }
 
-function issueReceipt() {
-  receiptNumber++;
-  receipts.push(new Receipt(receiptNumber));
-  trimReceipts();
-  setStatus(
-    "Your receipt lists the objects you caught and the time you spent. Print another me, or press Enter, to receive another copy.",
-  );
-}
-
-function trimReceipts() {
-  while (receipts.length > 7) receipts.shift();
-}
-
-function drawReceipts() {
-  printOnBeat();
-  for (const receipt of receipts) if (receipt.echo) receipt.show();
-  const front = currentReceipt();
-  if (front) front.show();
-  cursor(front && front.hit(mouseX, mouseY) ? HAND : ARROW);
+function drawSignals() {
+  drawSignalRoom();
+  addSignalsOnBeat();
+  for (const signal of signals) signal.show();
+  drawSignalGlitch();
+  cursor(signalAt(mouseX, mouseY) ? HAND : ARROW);
   if (returnAt > 0 && millis() >= returnAt) beginReturn();
 }
 
-function printOnBeat() {
-  if (receiptBeat >= RECEIPT_BEATS.length) return;
-  if (frameCount - receiptFrame < RECEIPT_BEATS[receiptBeat]) return;
-  if (receiptBeat > 0)
-    receipts.splice(max(0, receipts.length - 1), 0, new Receipt(++receiptNumber, true));
-  receiptBeat++;
-  trimReceipts();
+function addSignalsOnBeat() {
+  if (signalBeat >= SIGNAL_BEATS.length) return;
+  if (frameCount - signalFrame < SIGNAL_BEATS[signalBeat]) return;
+  if (signalBeat > 0) addSignalEchoes(2);
+  signalBeat++;
 }
 
-function currentReceipt() {
-  for (let i = receipts.length - 1; i >= 0; i--) {
-    if (!receipts[i].echo) return receipts[i];
+function signalAt(x, y) {
+  for (let i = signals.length - 1; i >= 0; i--) {
+    if (signals[i].hit(x, y)) return signals[i];
   }
   return null;
 }
 
-function printAnotherMe(x, y) {
-  const receipt = currentReceipt();
-  if (!receipt || !receipt.ready()) return;
-  if (x !== undefined && !receipt.hit(x, y)) return;
+function activateSignal(x, y) {
+  if (millis() - signalStartedAt < 700) return;
+  const signal = x === undefined ? signals[8] : signalAt(x, y);
+  if (!signal) return;
   if (returnAt === 0) returnAt = millis() + 12000;
-  receipt.paid = true;
-  receipt.show();
-  meltReceiptImage(receipt);
-  receipt.moveAside();
+  signal.activeUntil = millis() + 650;
+  signalGlitchUntil = millis() + 240;
+  meltSignalImage(signal);
+  addSignalEchoes(5);
   playEffect("ok", 0.35);
-  issueReceipt();
-  replayReceipts();
+  replaySignals();
 }
 
 function beginReturn() {
   state = "return";
   returnEnd = millis() + 1900;
-  const receipt = currentReceipt();
-  if (receipt) meltReceiptImage(receipt);
+  meltSignalImage(signals[8]);
   datamosh.draw(drawingContext, 0);
   meltPicture = get();
   stopSounds();
@@ -341,9 +324,9 @@ function updateHud() {
   stage.dataset.mode = state;
   stage.dataset.collected = collected;
   stage.dataset.damageHits = meltClicks;
-  stage.dataset.receipts = receipts.length;
-  stage.dataset.printedCopies = receiptNumber;
-  stage.dataset.receiptReady = String(Boolean(currentReceipt()?.ready()));
+  stage.dataset.signals = signals.length;
+  stage.dataset.signalCopies = signalNumber;
+  stage.dataset.signalReady = String(state === "signals" && millis() - signalStartedAt >= 700);
   stage.dataset.damageCoverage = datamosh ? datamosh.coverage.toFixed(3) : "0";
   stage.dataset.datamoshBeats = datamosh ? datamosh.beatCount : 0;
 }
