@@ -1,35 +1,25 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// AI-assisted, revised for ME-MARRT: an abstract room of repeating identity warnings.
+// AI-assisted, revised for ME-MARRT: generative identity warnings over the original melt.
 // The supplied reference guides the red hexagons and hazard stripes; all labels are project-specific.
 const SIGNAL_WORDS = ["MORE", "AGAIN", "NEW ME", "WANT", "NEED", "NOT YET"];
 
-function buildSignalRoom() {
+function buildSignals() {
   signals = [];
-  for (let i = 0; i < 3; i++) {
-    addRoomSignal(60 + (i % 2) * 140, 270 + i * 220, 350, 255, "MORE", true, -0.08);
-    addRoomSignal(1860 - (i % 2) * 140, 270 + i * 220, 350, 255, "AGAIN", true, 0.08);
-  }
-  addRoomSignal(735, 600, 250, 205, "NEW ME", true);
-  addRoomSignal(1185, 600, 250, 205, "MORE", true);
-  addRoomSignal(960, 765, 250, 205, "ME?", true);
-  addRoomSignal(960, 365, 710, 165, "NO FINAL SELF", true);
-  addRoomSignal(485, 565, 230, 180, "WANT");
-  addRoomSignal(1435, 565, 230, 180, "NEED");
+  addGeneratedSignal("ME?", true);
+  for (let i = 0; i < 8; i++) addGeneratedSignal(random(SIGNAL_WORDS), i % 3 === 0);
   signalBaseCount = signals.length;
 }
 
-function addRoomSignal(x, y, w, h, word, solid = false, angle = 0) {
-  signals.push(new WarningSignal(x, y, w, h, word, solid, angle));
+function addGeneratedSignal(word, solid = false) {
+  const w = random(200, 370);
+  const h = random(125, 215);
+  const x = random(w / 2 + 40, W - w / 2 - 40);
+  const y = random(h / 2 + 80, H - h / 2 - 100);
+  signals.push(new WarningSignal(x, y, w, h, word, solid, random(-0.18, 0.18)));
 }
 
 function addSignalEchoes(count) {
-  for (let i = 0; i < count; i++) {
-    const side = signalNumber % 2 === 0;
-    const x = side ? random(290, 610) : random(1310, 1630);
-    const h = random(75, 135);
-    const word = random(SIGNAL_WORDS);
-    addRoomSignal(x, random(160, 910), h * 1.5, h, word, false, random(-0.14, 0.14));
-  }
+  for (let i = 0; i < count; i++) addGeneratedSignal(random(SIGNAL_WORDS), random() < 0.25);
   while (signals.length > 32) signals.splice(signalBaseCount, 1);
 }
 
@@ -45,11 +35,32 @@ class WarningSignal {
     this.angle = angle;
     this.born = millis() + (this.number % 6) * 35;
     this.activeUntil = 0;
+    this.initMotion();
+  }
+
+  initMotion() {
+    this.changeEvery = floor(random(65, 145));
+    this.scatter();
+  }
+
+  // Each signal has its own rhythm. Ordinary position updates move it toward a new random point.
+  scatter() {
+    this.targetX = random(this.w / 2 + 40, W - this.w / 2 - 40);
+    this.targetY = random(this.h / 2 + 80, H - this.h / 2 - 100);
+    this.targetAngle = random(-0.2, 0.2);
+  }
+
+  update() {
+    if (frameCount % this.changeEvery === 0) this.scatter();
+    this.x += (this.targetX - this.x) * 0.035;
+    this.y += (this.targetY - this.y) * 0.035;
+    this.angle += (this.targetAngle - this.angle) * 0.05;
   }
 
   show() {
     const age = millis() - this.born;
     if (age < 0 || (age < 180 && floor(age / 45) % 2 === 0)) return;
+    this.update();
     const jitter = millis() < this.activeUntil ? 15 : 1.5;
     push();
     translate(this.x + random(-jitter, jitter), this.y);
@@ -69,6 +80,10 @@ class WarningSignal {
     stroke(this.solid || selected ? "#450707" : "#EE2724");
     strokeWeight(1.5);
     this.hexagon(0.92);
+    if (this.number % 3 === 0) {
+      drawHazardBar(-this.w * 0.32, -this.h / 2 - 20, this.w * 0.64);
+      drawHazardBar(-this.w * 0.32, this.h / 2 + 4, this.w * 0.64);
+    }
   }
 
   hexagon(amount) {
@@ -119,43 +134,19 @@ class WarningSignal {
   }
 }
 
-function drawSignalRoom() {
-  noStroke();
-  fill(0, 238);
-  rect(0, 0, W, H);
+// Do not cover or dim the datamosh: the original engine has already drawn this frame.
+function drawSignalField() {
   drawSignalConnections();
-  drawSignalFragments();
-  drawWarningTag(540, 240, "SELF");
-  drawWarningTag(1380, 240, "LOST");
-  drawWarningTag(525, 800, "MORE");
-  drawWarningTag(1395, 800, "AGAIN");
   drawSignalCaption();
 }
 
 function drawSignalConnections() {
-  stroke("#601015");
+  stroke(238, 39, 36, 100);
   strokeWeight(1);
-  for (let i = 0; i < 6; i++) {
-    line(960, 365, i < 3 ? 0 : W, 180 + (i % 3) * 300);
-    line(960, H, i * 384, 680);
+  for (let i = 0; i < signals.length; i += 2) {
+    const other = signals[(i + 3) % signals.length];
+    line(signals[i].x, signals[i].y, other.x, other.y);
   }
-}
-
-function drawWarningTag(x, y, word) {
-  push();
-  translate(x, y);
-  drawHazardBar(-90, -65, 180);
-  drawHazardBar(-90, 57, 180);
-  noStroke();
-  fill("#EE2724");
-  textAlign(CENTER, CENTER);
-  textFont("Impact");
-  textSize(62);
-  text(word, 0, -4);
-  textFont("monospace");
-  textSize(12);
-  text("IDENTITY / OVERLOAD", 0, 38);
-  pop();
 }
 
 function drawHazardBar(x, y, w) {
@@ -168,32 +159,19 @@ function drawHazardBar(x, y, w) {
   }
 }
 
-function drawSignalFragments() {
-  for (let i = 0; i < 8; i++) {
-    const x = i < 4 ? 50 + i * 180 : 1330 + (i - 4) * 180;
-    push();
-    translate(x, 990 - abs(x - 960) * 0.13);
-    rotate(x < 960 ? -0.12 : 0.12);
-    stroke("#EE2724");
-    strokeWeight(2);
-    image(signalTexture, 0, 0, 150, 92, (i * 230) % 1600, 400, 280, 170);
-    noFill();
-    rect(0, 0, 150, 92);
-    drawHazardBar(0, -20, 150);
-    pop();
-  }
-}
-
 function drawSignalCaption() {
   noStroke();
-  fill("#EE2724");
+  fill(0, 220);
+  rect(690, 60, 540, 38);
+  rect(610, 1015, 700, 38);
   textFont("monospace");
   textStyle(NORMAL);
   textSize(16);
   textAlign(CENTER, CENTER);
-  text("ME-MARRT / SELF OPTIMISATION LOOP", 960, 100);
+  fill("#EE2724");
+  text("ME-MARRT / SELF OPTIMISATION LOOP", 960, 79);
   fill("#FFFF00");
-  text("YOU ARE STILL HERE.          WHAT ARE YOU TRYING TO REPLACE?", 960, 1035);
+  text("YOU ARE STILL HERE.    WHAT ARE YOU TRYING TO REPLACE?", 960, 1034);
 }
 
 // A short click tears the signals themselves; the original melt continues underneath.

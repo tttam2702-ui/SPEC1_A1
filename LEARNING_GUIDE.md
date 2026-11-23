@@ -49,7 +49,7 @@ The p5.sound addon handles audio playback. `MeltBeatClock` reads its playhead so
 
 **Melting:** `ChallengeDatamosh` keeps copies of the picture on hidden canvases. It recolours pixels, moves small fragments and stretches strips downward. The next frame reuses the damaged picture, so the melt keeps building. This advanced image effect simulates datamoshing; it does not corrupt a video file.
 
-**Warning room:** `WarningSignal` stores each red hexagon's position, size, angle and word. A loop draws the signals in an array. `hit()` checks the mouse against the hexagon. A click adds more signals, tears a few image strips and sends the touched area into the existing melting effect. Yellow stripes use rectangles and a loop.
+**Warning field:** `WarningSignal` stores each red hexagon's position, size, angle and word. A loop draws the signals in an array. `scatter()` chooses a random target; `update()` moves the position and angle a little toward it each frame. `hit()` checks the mouse against the hexagon. A click adds more signals, tears a few image strips and sends the touched area into the existing melting effect. Yellow stripes use rectangles and a loop.
 
 **Time:** `millis()` gives the time since the sketch started. Comparing it with a saved start time lets the artwork wait before returning to the store. It uses the same basic idea as comparing two numbers in an `if` statement.
 

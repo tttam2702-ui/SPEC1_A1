@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // AI-assisted artwork, rewritten with basic p5 drawing, arrays, loops and classes.
-// The ending becomes a room of multiplying identity signals, not a computer error dialog.
+// The ending adds a generative field of multiplying identity signals to the melting image.
 let cartImage, storeBackground, meltPicture, meltSource;
 let datamosh = null;
 let products = [],
@@ -15,7 +15,7 @@ let signalFrame = 0,
   signalNumber = 0;
 let signalStartedAt = 0,
   signalGlitchUntil = 0;
-let signalTexture, signalBaseCount;
+let signalBaseCount;
 let returnAt = 0,
   returnEnd = 0;
 const SIGNAL_BEATS = [3, 27, 41, 54, 67];
@@ -44,7 +44,7 @@ function preload() {
 
 function setup() {
   const canvas = makeCanvas(
-    "Falling products, a melting shopping cart and an abstract identity warning room",
+    "Falling products, a melting shopping cart and a generative hexagonal warning field",
   );
   canvas.elt.tabIndex = 0;
   storeBackground = makeStoreBackground(false);
@@ -211,10 +211,9 @@ function drawMelting() {
 function beginSignals() {
   state = "signals";
   document.getElementById("challenge-stage").classList.add("is-art-ending");
-  signalTexture = get();
   signalStartedAt = millis();
   signalNumber = 0;
-  buildSignalRoom();
+  buildSignals();
   replaySignals();
   setStatus(
     "Touch a red signal, or press Enter. Every attempt to change yourself creates more signals.",
@@ -255,7 +254,7 @@ function replaySignals() {
 }
 
 function drawSignals() {
-  drawSignalRoom();
+  drawSignalField();
   addSignalsOnBeat();
   for (const signal of signals) signal.show();
   drawSignalGlitch();
@@ -279,7 +278,7 @@ function signalAt(x, y) {
 
 function activateSignal(x, y) {
   if (millis() - signalStartedAt < 700) return;
-  const signal = x === undefined ? signals[8] : signalAt(x, y);
+  const signal = x === undefined ? signals[0] : signalAt(x, y);
   if (!signal) return;
   if (returnAt === 0) returnAt = millis() + 12000;
   signal.activeUntil = millis() + 650;
@@ -293,7 +292,7 @@ function activateSignal(x, y) {
 function beginReturn() {
   state = "return";
   returnEnd = millis() + 1900;
-  meltSignalImage(signals[8]);
+  meltSignalImage(signals[0]);
   datamosh.draw(drawingContext, 0);
   meltPicture = get();
   stopSounds();

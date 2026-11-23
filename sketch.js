@@ -255,6 +255,7 @@ function drawPassingCart() {
 }
 
 function mousePressed() {
+  if (!landingArt) return;
   if (aboutOpen || landingArt.dismissMessageAt({ x: mouseX, y: mouseY }, millis())) return;
   for (let i = storeItems.length - 1; i >= 0; i--) {
     if (storeItems[i].contains(mouseX, mouseY)) {
