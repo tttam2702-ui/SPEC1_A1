@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // AI-assisted artwork, rewritten with basic p5 drawing, arrays, loops and classes.
 // The products and messages are fictional promises of a better self.
-let cartImage, storeBackground, meltPicture;
+let cartImage, storeBackground, meltPicture, meltSource;
+let datamosh = null;
 let products = [],
   words = [],
-  patches = [],
   notices = [];
 let state = "intro",
   paused = false,
@@ -16,6 +16,11 @@ let noticeFrame = 0,
 let returnAt = 0,
   returnEnd = 0;
 const NOTICE_BEATS = [3, 27, 41, 54, 67];
+// The original recording's attacks drive the restored melting engine.
+const MELT_BEATS = [
+  0.025, 0.299, 0.586, 0.874, 1.161, 1.442, 1.729, 2.015, 2.302, 2.589, 2.876, 3.157, 3.444, 3.729,
+  4.011,
+];
 const PRODUCT_NAMES = ["OLD CLOTHES", "SELF HELP BOOK", "SKINCARE", "HEADPHONES", "PLANT"];
 const SHIRT_POINTS = [
   [-35, -65],
@@ -103,7 +108,8 @@ function restartChallenge() {
   stopSounds();
   products = [];
   words = [];
-  patches = [];
+  datamosh = null;
+  meltSource = null;
   notices = [];
   collected = 0;
   meltClicks = 0;
@@ -199,35 +205,60 @@ function drawWords() {
 function beginMelt(x, y) {
   drawShopping();
   state = "melt";
-  meltPicture = get();
+  meltSource = get().canvas;
+  loopEffect("datamosh", 0.045);
+  datamosh = new ChallengeDatamosh(meltSource, { track: new MeltBeatClock() });
   meltAt(x, y);
   setStatus("Each click now melts another area. Click around the picture, or press Enter.");
 }
 
 function meltAt(x, y) {
-  patches.push(new MeltPatch(x, y));
-  meltClicks++;
-  if (patches.length > 24) patches.shift();
-  if (meltClicks >= 8 && state === "melt") beginNotifications();
+  if (!datamosh) return;
+  datamosh.addDamage(x, y, meltSource);
+  meltClicks = datamosh.hits;
 }
 
-// Copy narrow pieces of the photo downward, then keep the changed picture.
+// Keep the original colour processing, feedback and melting ribbons unchanged.
 function drawMelting() {
   loopEffect("datamosh", 0.045);
-  image(meltPicture, 0, 0, W, H);
-  for (const patch of patches) patch.show();
-  if (frameCount % 3 === 0) meltPicture = get();
+  datamosh.audioTrack.tick(min(deltaTime / 1000, 0.05));
+  datamosh.draw(drawingContext, min(deltaTime / 1000, 0.05), meltSource);
   drawWords();
+  if (state === "melt" && datamosh.complete) beginNotifications();
 }
 
 function beginNotifications() {
   state = "notifications";
   document.getElementById("challenge-stage").classList.add("is-art-ending");
-  for (let row = 0; row < 3; row++) {
-    for (let col = 0; col < 4; col++) patches.push(new MeltPatch(col * 480 + 200, row * 340 + 100));
-  }
   replayNotifications();
   setStatus("Artwork messages are appearing. Click OK, or press Enter, to receive more.");
+}
+
+// Adapt p5.sound's playhead to the old visual engine's looping beat clock.
+class MeltBeatClock {
+  constructor() {
+    this.beats = MELT_BEATS;
+    this.loop = true;
+    this.duration = projectSounds.datamosh.isLoaded()
+      ? projectSounds.datamosh.duration()
+      : 4.280979;
+    this.previous = 0;
+    this.offset = 0;
+    this.silentTime = 0;
+  }
+
+  tick(dt) {
+    this.silentTime += dt;
+  }
+
+  elapsed() {
+    const sound = projectSounds.datamosh;
+    if (!sound.isLoaded()) return this.silentTime;
+    const current = sound.currentTime();
+    if (current < this.previous - 0.05) this.offset += this.duration;
+    this.previous = current;
+    return this.offset + current;
+  }
 }
 
 function replayNotifications() {
@@ -279,18 +310,29 @@ function acceptNotice(notice) {
   if (notice.dismiss !== -1) return;
   notice.dismiss = 12;
   if (returnAt === 0) returnAt = millis() + 12000;
-  meltPicture = get();
-  patches.push(new MeltPatch(notice.x + 200, notice.y + 80));
-  if (patches.length > 24) patches.shift();
+  meltNoticeImage(notice);
   playEffect("ok", 0.35);
   addNotice();
   addNotice();
   replayNotifications();
 }
 
+function meltNoticeImage(notice) {
+  datamosh.meltNotification({
+    title: notice.words[0],
+    message: notice.words[1],
+    x: notice.x / W,
+    y: notice.y / H,
+    width: 460 / W,
+    height: 235 / H,
+  });
+}
+
 function beginReturn() {
   state = "return";
   returnEnd = millis() + 1900;
+  for (const notice of notices.slice(-14)) meltNoticeImage(notice);
+  datamosh.draw(drawingContext, 0);
   meltPicture = get();
   stopSounds();
   playEffect("transition", 0.4);
@@ -321,6 +363,8 @@ function updateHud() {
   stage.dataset.collected = collected;
   stage.dataset.damageHits = meltClicks;
   stage.dataset.notifications = notices.length;
+  stage.dataset.damageCoverage = datamosh ? datamosh.coverage.toFixed(3) : "0";
+  stage.dataset.datamoshBeats = datamosh ? datamosh.beatCount : 0;
 }
 
 function setStatus(message) {
@@ -415,24 +459,6 @@ function drawPlant() {
   fill("#EE2724");
   triangle(-50, 20, 50, 20, 0, 90);
   rect(-55, 15, 110, 15);
-}
-
-class MeltPatch {
-  constructor(x, y) {
-    this.x = constrain(x, 100, W - 100);
-    this.y = constrain(y, 20, H - 30);
-    this.drop = 1;
-  }
-
-  show() {
-    for (let i = 0; i < 5; i++) {
-      const x = constrain(this.x + random(-150, 150), 0, W - 90);
-      const y = constrain(this.y + random(-90, 90), 0, H - 12);
-      const w = random(12, 90);
-      copy(meltPicture, x, y, w, 8, x + random(-12, 12), y + this.drop, w, 24 + this.drop);
-    }
-    this.drop = min(this.drop + 2.5, 320);
-  }
 }
 
 class Notice {

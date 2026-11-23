@@ -1,6 +1,6 @@
 # Reading ME-MARRT step by step
 
-This guide links the project to the topics in the supplied class schedule. The schedule gives topic names; it does not show every function taught in class. Image loading/copying and sound playback are small extensions used for this artwork.
+This guide links the scene interactions to the topics in the supplied class schedule. The schedule gives topic names; it does not show every function taught in class. The detailed tracking and datamosh modules go beyond those topics and are identified separately below.
 
 ## Start with the p5 order
 
@@ -9,9 +9,9 @@ This guide links the project to the topics in the supplied class schedule. The s
 3. **`draw()`** runs repeatedly. It updates positions, then draws the current picture.
 4. Mouse functions change the state when the visitor clicks or drags.
 
-Read `common.js`, then `sketch.js` and `ambient-art.js`, then `challenge.js`. `index.html` and `challenge.html` load those scripts; no code compiler is needed.
+Read the basic flow in `common.js`, `sketch.js` and `challenge.js` first. Read the advanced visual modules, `ambient-art.js` and `challenge-datamosh.js`, after that. `index.html` and `challenge.html` load those scripts; no code compiler is needed.
 
-## Concepts used in the artwork
+## Concepts used in the scene interactions
 
 | Class topic                                | What it does here                                                                                                                                                                                      |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -37,7 +37,7 @@ These are examples of how the schedule's ideas apply. They are not a claim that 
 - **`loopEffect(name, volume)`** repeats a background sound.
 - **`stopSounds()`** stops playback when leaving a page.
 
-The p5.sound addon handles audio playback. This version has no custom Web Audio clock or beat-analysis system.
+The p5.sound addon handles audio playback. `MeltBeatClock` reads its playhead so the restored melting effect follows the recording's cue times; it does not analyse new beats or schedule audio through a custom Web Audio engine.
 
 ## How the effects work
 
@@ -45,9 +45,9 @@ The p5.sound addon handles audio playback. This version has no custom Web Audio 
 
 **Changing outfits:** the clothing images stay at fixed positions. At short time intervals, the program chooses numbers from 1 to 3. Joining a string and a number, such as `"top" + topNumber`, identifies the next picture in the image object. The outfit changes without a crossfade.
 
-**Messages and tracking:** shapes and lines are drawn around the existing artwork. Their positions and colours can change over time. They are visual decorations, not camera or machine-learning tracking.
+**Messages and tracking:** `FrameArt` draws message sprites and samples the existing product images for coloured tracking patches. The points jitter and connect with lines. This advanced visual effect is decorative; it does not use a camera or machine-learning tracker.
 
-**Melting:** `get()` copies part of the p5 canvas. `copy()` can put an image strip in a different place or stretch it. Repeating those operations moves the picture down and makes a digital melt. This is an image effect inspired by datamoshing, not corruption of a video file.
+**Melting:** `ChallengeDatamosh` keeps copies of the picture on hidden canvases. It recolours pixels, moves small fragments and stretches strips downward. The next frame reuses the damaged picture, so the melt keeps building. This advanced image effect simulates datamoshing; it does not corrupt a video file.
 
 **Notifications:** each window is stored as an object in an array. Drawing all entries creates the overlapping stack. A mouse click inside an **OK** button adds more windows.
 
@@ -55,16 +55,14 @@ The p5.sound addon handles audio playback. This version has no custom Web Audio 
 
 ## Find the landing code
 
-| Function or class                                                              | What to look for                                                                         |
-| ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| `resetLandingScene()` in `sketch.js`                                           | A loop creates products. `floor(random(3, 6))` creates 3, 4 or 5 barcodes.               |
-| `StoreItem.update()` and `StoreItem.keepInStage()`                             | Adds gravity and speed, then checks the rectangle's boundaries.                          |
-| `StoreItem.bounce()` and `StoreItem.avoidCircle()`                             | Checks overlapping products and keeps them outside the fixed yellow circle.              |
-| `mousePressed()`, `mouseDragged()` and `mouseReleased()` in `sketch.js`        | Finds a product, follows mouse movement, then releases it.                               |
-| `changeOutfit()` and `drawHead()` in `sketch.js`                               | Chooses image numbers and creates a coloured polygon with a loop.                        |
-| `drawPassingCart()` in `sketch.js`                                             | Adds to the cart's horizontal position and uses `millis()` to wait before the next pass. |
-| `StoreMessage.update()` and `StoreMessage.display()` in `ambient-art.js`       | Increments a message's age, plays a pop and changes its scale.                           |
-| `SceneAmbient.drawTracking()` and `SceneAmbient.drawWeb()` in `ambient-art.js` | Draws tracking boxes and connects stored points with lines.                              |
+| Function or class                                                       | What to look for                                                                         |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `resetLandingScene()` in `sketch.js`                                    | A loop creates products. `floor(random(3, 6))` creates 3, 4 or 5 barcodes.               |
+| `StoreItem.update()` and `StoreItem.keepInStage()`                      | Adds gravity and speed, then checks the rectangle's boundaries.                          |
+| `StoreItem.bounce()` and `StoreItem.avoidCircle()`                      | Checks overlapping products and keeps them outside the fixed yellow circle.              |
+| `mousePressed()`, `mouseDragged()` and `mouseReleased()` in `sketch.js` | Finds a product, follows mouse movement, then releases it.                               |
+| `changeOutfit()` and `drawHead()` in `sketch.js`                        | Chooses image numbers and creates a coloured polygon with a loop.                        |
+| `drawPassingCart()` in `sketch.js`                                      | Adds to the cart's horizontal position and uses `millis()` to wait before the next pass. |
 
 ## Find the challenge code
 
@@ -74,9 +72,22 @@ The p5.sound addon handles audio playback. This version has no custom Web Audio 
 | `Product.update()` and `Product.show()`                                        | Adds speed to position, or moves a caught item toward the cart; then draws its shape.                   |
 | `drawShirt()`, `drawBook()`, `drawBottle()`, `drawHeadphones()`, `drawPlant()` | Builds products from p5 shapes and coordinates.                                                         |
 | `drawWords()`                                                                  | Updates a small label's position and upward/downward speed inside a loop.                               |
-| `MeltPatch.show()` and `drawMelting()`                                         | Copies strips with `copy()`, then preserves the changed canvas with `get()`.                            |
 | `Notice.show()` and `Notice.hit()`                                             | Draws a message window and tests whether its OK button was clicked.                                     |
 | `acceptNotice()` and `beginReturn()`                                           | Saves a deadline using `millis()`: 12 seconds after the first OK, then a 1.9-second transition.         |
+
+## Advanced visual modules
+
+These are additional techniques used to keep the detailed visual effects. They should be described as extensions, rather than claiming every line comes from the class topics.
+
+| Module and method                                                            | What it adds                                                                                                    |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `FrameArt.heatmapFor()` and `FrameArt.colorizeHeatmap()` in `ambient-art.js` | Reads image pixels and maps brightness to bright colours. A cache avoids repeating that pixel work every frame. |
+| `FrameArt.trackImage()` and `FrameArt.drawTrackingLinks()`                   | Samples patches from the products, draws jittering tracking boxes and joins points into a web.                  |
+| `FrameArt.drawMessages()` and `FrameArt.glitchMessage()`                     | Draws cached bubble images and splits them into offset strips when dismissed.                                   |
+| `ChallengeDatamosh.prepareTexture()` in `challenge-datamosh.js`              | Builds the colourful source texture by changing pixel channels.                                                 |
+| `ChallengeDatamosh.addDamage()` and `ChallengeDatamosh.draw()`               | Adds damage at a clicked position, then keeps transporting fragments and stretching melting ribbons.            |
+
+The advanced code uses the browser's Canvas 2D API, including `drawImage()`, pixel data, hidden canvases and clipping. It also uses image caches and extra data structures. These are browser capabilities, so they add no separate runtime library.
 
 ## Explain one interaction
 

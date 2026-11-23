@@ -27,26 +27,27 @@ Use the server instead of opening `index.html` with `file://`: the browser needs
 The p5 drawing surfaces are **1920 × 1080 pixels** with `pixelDensity(1)`. The website scales the complete 16:9 image to fit the window without stretching or cropping it. Other screen proportions can show dark margins. Use **FULL SCREEN** in the navigation bar, or the browser's fullscreen command; press **Esc** to leave fullscreen.
 
 - **Landing — `index.html`:** drag the product cutouts, click message bubbles and watch the changing outfit. Press **R** to drop the products again or **S** to save a PNG. The main button opens the challenge directly.
-- **Challenge — `challenge.html`:** read the instructions, then start. Click falling objects to put them in the cart. After six catches, clicks make areas of the picture melt. After eight melting clicks, notification windows appear and multiply when you click **OK**. The first OK starts a 12-second wait, then a short glitch returns to the landing page. While the canvas is focused, **Enter** catches an item, melts another area or accepts a notification. **PAUSE** and **RESTART** are available before the notification ending.
+- **Challenge — `challenge.html`:** read the instructions, then start. Click falling objects to put them in the cart. After six catches, clicks make areas of the picture melt. Keep clicking different areas until notification windows appear; they multiply when you click **OK**. The first OK starts a 12-second wait, then a short glitch returns to the landing page. While the canvas is focused, **Enter** catches an item, melts another area or accepts a notification. **PAUSE** and **RESTART** are available before the notification ending.
 - **Both pages:** **ABOUT** shows the project statement and credits.
 
 The offers are fictional. No purchase takes place. The ending contains moving glitch imagery and sound.
 
 ## Read the code
 
-This version uses basic p5 drawing, image manipulation, sound and simple classes. It does not use a physics engine or a separate wheel page.
+The product movement, outfit changes, collection and notifications use basic p5 drawing, conditions, loops, arrays and classes. Two dedicated modules retain the detailed tracking and datamosh effects. They use native Canvas 2D image processing beyond the topics shown in the class schedule. The project has two pages and uses no physics library.
 
-| File                           | Purpose                                                                    |
-| ------------------------------ | -------------------------------------------------------------------------- |
-| `common.js`                    | Shared screen size, sound and navigation helpers.                          |
-| `sketch.js`                    | Landing images, handmade movement, mouse dragging and the changing outfit. |
-| `ambient-art.js`               | Message bubbles and decorative tracking/glitch shapes.                     |
-| `challenge.js`                 | Falling items, the shopping cart, melting strips and notification windows. |
-| `site-shell.js`                | Shared navigation, fullscreen and project credits.                         |
-| `style.css`                    | Fits the artwork into the browser window.                                  |
-| `index.html`, `challenge.html` | Load the local libraries and the correct page script.                      |
+| File                           | Purpose                                                                        |
+| ------------------------------ | ------------------------------------------------------------------------------ |
+| `common.js`                    | Shared screen size, sound and navigation helpers.                              |
+| `sketch.js`                    | Landing images, handmade movement, mouse dragging and the changing outfit.     |
+| `ambient-art.js`               | Detailed message sprites, image heatmaps, tracking boxes and connecting lines. |
+| `challenge.js`                 | Falling items, the shopping cart, challenge stages and notification windows.   |
+| `challenge-datamosh.js`        | Advanced pixel recolouring, image feedback and continuously melting regions.   |
+| `site-shell.js`                | Shared navigation, fullscreen and project credits.                             |
+| `style.css`                    | Fits the artwork into the browser window.                                      |
+| `index.html`, `challenge.html` | Load the local libraries and the correct page script.                          |
 
-Start with [LEARNING_GUIDE.md](LEARNING_GUIDE.md). It connects the artwork to the programming concepts taught in class. [AI_ASSISTANCE.md](AI_ASSISTANCE.md) explains the AI assistance and revisions openly.
+Start with [LEARNING_GUIDE.md](LEARNING_GUIDE.md). It separates the class-level interaction code from the two advanced visual modules and explains how they connect. [AI_ASSISTANCE.md](AI_ASSISTANCE.md) explains the AI assistance and revisions openly.
 
 ## Licences and credits
 

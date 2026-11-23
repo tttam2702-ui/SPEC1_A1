@@ -72,22 +72,31 @@ function preload() {
 function setup() {
   const canvas = makeCanvas("ME-MARRT. Drag the products; click a message. R resets; S saves.");
   storeBackground = makeStoreBackground();
-  landingArt = new SceneAmbient(W, H);
   resetLandingScene();
   canvas.elt.dataset.sceneReady = "true";
 }
 
 function resetLandingScene() {
+  for (const item of storeItems) if (item.texture) item.texture.remove();
   storeItems = [];
   heldItem = null;
   for (let i = 0; i < PRODUCT_ROWS.length; i++) addProduct(PRODUCT_ROWS[i], i);
   const barcodeCount = floor(random(3, 6));
   for (let i = 0; i < barcodeCount; i++) addBarcode(i);
   changeOutfit();
-  landingArt.reset();
+  resetLandingArt();
   cartX = -350;
   cartRunning = false;
   nextCart = millis() + random(5000, 8000);
+}
+
+// Reuse the original pixel-sampled tracking and side-message artwork unchanged.
+function resetLandingArt() {
+  const logoBounds = { x: 515, y: 18, w: 890, h: 268 };
+  landingArt = new FrameArt(W, H, AREA, logoBounds, {
+    onMessageAppear: () => playEffect("pop", 0.12),
+    onMessageDismiss: () => playEffect("pop", 0.16),
+  });
 }
 
 function addProduct(row, index) {
@@ -102,18 +111,32 @@ function addBarcode(index) {
   const item = new StoreItem("barcode", x, -100 - index * 170, random(150, 195), 50);
   item.barColor = random(["#08BEFF", "#FFFF00"]);
   for (let x = 8; x < 188; x += random(3, 7)) item.bars.push([x, random(1, 3)]);
+  item.texture = makeBarcodePicture(item);
   storeItems.push(item);
+}
+
+function makeBarcodePicture(item) {
+  const picture = createGraphics(200, 70);
+  picture.pixelDensity(1);
+  picture.background(item.barColor);
+  picture.noStroke();
+  picture.fill(0);
+  for (let bar of item.bars) picture.rect(bar[0], 6, bar[1], 45);
+  picture.textSize(9);
+  picture.textAlign(CENTER, CENTER);
+  picture.text("N o .  0 0 0 0 0 0 1", 100, 61);
+  return picture;
 }
 
 function draw() {
   if (aboutOpen) return;
   imageMode(CORNER);
   image(storeBackground, 0, 0);
-  landingArt.drawMessages();
+  landingArt.draw(drawingContext, millis());
   drawYellowCircle();
   updateProducts();
   drawCharacter();
-  landingArt.drawTracking(storeItems);
+  landingArt.drawTrackingLinks(drawingContext);
   drawLandingLogo();
   drawPassingCart();
 }
@@ -160,6 +183,7 @@ function drawRotatingBody() {
   translate(YELLOW.x, YELLOW.y);
   rotate(bodyAngle);
   image(body, -w / 2, -h / 2, w, h);
+  trackLandingPicture(body, w, h, "rotating-body", null, 3);
   pop();
 }
 
@@ -204,6 +228,18 @@ function drawClothes() {
 function drawGarment(name, width, height, top) {
   const c = LANDING_CROPS[name];
   image(pictures[name], YELLOW.x - width / 2, top, width, height, c[0], c[1], c[2], c[3]);
+  push();
+  translate(YELLOW.x, top + height / 2);
+  trackLandingPicture(pictures[name], width, height, "outfit:" + name, c, 2);
+  pop();
+}
+
+// FrameArt expects a centre-origin image and reads the active canvas transform.
+function trackLandingPicture(picture, width, height, id, crop, count = 1) {
+  const bounds = crop
+    ? { x: crop[0], y: crop[1], w: crop[2], h: crop[3] }
+    : { x: 0, y: 0, w: picture.width, h: picture.height };
+  landingArt.trackImage(drawingContext, picture.canvas, bounds, width, height, id, count);
 }
 
 function drawPassingCart() {
@@ -219,7 +255,7 @@ function drawPassingCart() {
 }
 
 function mousePressed() {
-  if (aboutOpen || landingArt.click(mouseX, mouseY)) return;
+  if (aboutOpen || landingArt.dismissMessageAt({ x: mouseX, y: mouseY }, millis())) return;
   for (let i = storeItems.length - 1; i >= 0; i--) {
     if (storeItems[i].contains(mouseX, mouseY)) {
       heldItem = storeItems[i];
@@ -264,6 +300,7 @@ class StoreItem {
     this.angle = random(-0.12, 0.12);
     this.entered = false;
     this.bars = [];
+    this.id = storeItems.length;
   }
 
   update() {
@@ -360,21 +397,18 @@ class StoreItem {
       const c = LANDING_CROPS[this.name];
       image(pictures[this.name], -this.w / 2, -this.h / 2, this.w, this.h, c[0], c[1], c[2], c[3]);
     }
+    this.trackPicture();
     pop();
   }
 
   drawBarcode() {
-    push();
-    translate(-this.w / 2, -this.h / 2);
-    scale(this.w / 200, this.h / 70);
-    noStroke();
-    fill(this.barColor);
-    rect(0, 0, 200, 70);
-    fill(0);
-    for (let bar of this.bars) rect(bar[0], 6, bar[1], 45);
-    textSize(9);
-    textAlign(CENTER, CENTER);
-    text("N o .  0 0 0 0 0 0 1", 100, 61);
-    pop();
+    image(this.texture, -this.w / 2, -this.h / 2, this.w, this.h);
+  }
+
+  trackPicture() {
+    if (!this.entered) return;
+    const picture = this.name === "barcode" ? this.texture : pictures[this.name];
+    const crop = this.name === "barcode" ? null : LANDING_CROPS[this.name];
+    trackLandingPicture(picture, this.w, this.h, "asset:" + this.id, crop);
   }
 }
