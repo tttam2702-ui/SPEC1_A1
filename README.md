@@ -1,6 +1,6 @@
 # ME-MARRT — Identity Superstore
 
-An interactive artwork about shopping, identity and **SDG 12: Responsible Consumption and Production**. Objects promise a better version of you. Collecting them eventually turns the store into a melting image full of notifications.
+An interactive artwork about shopping, identity and **SDG 12: Responsible Consumption and Production**. Objects promise a better version of you. Collecting them eventually turns the store into a melting image that prints receipts for the visitor's time.
 
 - **Author:** Tran Thanh Tam — s3977954
 - **Group:** SCP_067
@@ -27,27 +27,32 @@ Use the server instead of opening `index.html` with `file://`: the browser needs
 The p5 drawing surfaces are **1920 × 1080 pixels** with `pixelDensity(1)`. The website scales the complete 16:9 image to fit the window without stretching or cropping it. Other screen proportions can show dark margins. Use **FULL SCREEN** in the navigation bar, or the browser's fullscreen command; press **Esc** to leave fullscreen.
 
 - **Landing — `index.html`:** drag the product cutouts, click message bubbles and watch the changing outfit. Press **R** to drop the products again or **S** to save a PNG. The main button opens the challenge directly.
-- **Challenge — `challenge.html`:** read the instructions, then start. Click falling objects to put them in the cart. After six catches, clicks make areas of the picture melt. Keep clicking different areas until notification windows appear; they multiply when you click **OK**. The first OK starts a 12-second wait, then a short glitch returns to the landing page. While the canvas is focused, **Enter** catches an item, melts another area or accepts a notification. **PAUSE** and **RESTART** are available before the notification ending.
+- **Challenge — `challenge.html`:** read the instructions, then start. Click falling objects to put them in the cart. After six catches, clicks make areas of the picture melt. Keep clicking until a receipt prints. It lists the six objects caught, their catch intervals and the total elapsed time. **PRINT ANOTHER ME** stamps the paper, melts it into the background and prints more copies. The first print starts a 12-second wait before the glitch return. While the canvas is focused, **Enter** catches an item, melts another area or prints a receipt. **PAUSE** and **RESTART** are available before the receipt ending.
 - **Both pages:** **ABOUT** shows the project statement and credits.
 
 The offers are fictional. No purchase takes place. The ending contains moving glitch imagery and sound.
 
 ## Read the code
 
-The product movement, outfit changes, collection and notifications use basic p5 drawing, conditions, loops, arrays and classes. Two dedicated modules retain the detailed tracking and datamosh effects. They use native Canvas 2D image processing beyond the topics shown in the class schedule. The project has two pages and uses no physics library.
+The product movement, outfit changes, collection and printed receipts use basic p5 drawing, conditions, loops, arrays and classes. Two dedicated modules retain the detailed tracking and datamosh effects. They use native Canvas 2D image processing beyond the topics shown in the class schedule. The project has two pages and uses no physics library.
 
 | File                           | Purpose                                                                        |
 | ------------------------------ | ------------------------------------------------------------------------------ |
 | `common.js`                    | Shared screen size, sound and navigation helpers.                              |
 | `sketch.js`                    | Landing images, handmade movement, mouse dragging and the changing outfit.     |
 | `ambient-art.js`               | Detailed message sprites, image heatmaps, tracking boxes and connecting lines. |
-| `challenge.js`                 | Falling items, the shopping cart, challenge stages and notification windows.   |
+| `challenge.js`                 | Falling items, the shopping cart, challenge stages and receipt printing.       |
+| `challenge-receipts.js`        | Custom thermal-paper artwork, real round timings, barcode and printed copies.  |
 | `challenge-datamosh.js`        | Advanced pixel recolouring, image feedback and continuously melting regions.   |
 | `site-shell.js`                | Shared navigation, fullscreen and project credits.                             |
 | `style.css`                    | Fits the artwork into the browser window.                                      |
 | `index.html`, `challenge.html` | Load the local libraries and the correct page script.                          |
 
 Start with [LEARNING_GUIDE.md](LEARNING_GUIDE.md). It separates the class-level interaction code from the two advanced visual modules and explains how they connect. [AI_ASSISTANCE.md](AI_ASSISTANCE.md) explains the AI assistance and revisions openly.
+
+## The final receipt
+
+The ending is a fictional ME-MARRT checkout, headed **YOU WERE THE PAYMENT.** Its item rows come from this round's catches; **KEEP LOOKING** accounts for time after the last catch. The price is $0.00, while **YOU PAID** shows elapsed session time. Printing again creates another paper copy instead of dismissing a computer error. Receipt data stays in page memory and resets with the round.
 
 ## Licences and credits
 

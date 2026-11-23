@@ -6,8 +6,8 @@ Codex assisted with generating, editing, simplifying, commenting and checking th
 
 - Reduced the experience to a landing page and a challenge page.
 - Replaced the physics library with position, speed, gravity, boundary checks and mouse dragging.
-- Used basic p5 drawing functions for product shapes, clothing, notification windows and page interactions.
-- Used arrays and simple classes to store moving objects and notification windows.
+- Used basic p5 drawing functions for product shapes, clothing, printed receipts and page interactions.
+- Used arrays and simple classes to store moving objects and printed receipts.
 - Restored the detailed tracking effect in `ambient-art.js` and the detailed melting effect in `challenge-datamosh.js`. These modules use native Canvas 2D and pixel processing beyond the supplied class schedule.
 - Used the p5.sound addon for local sound playback.
 - Removed the wheel and the custom Web Audio/beat-scheduling system.
@@ -16,3 +16,5 @@ Codex assisted with generating, editing, simplifying, commenting and checking th
 The project is not presented as entirely class-level code. The comments and [LEARNING_GUIDE.md](LEARNING_GUIDE.md) explain the basic scene logic and identify the two advanced visual modules. They do not replace the student's review: before submission, the student should read the code, test it and be able to explain how its variables, conditions, loops and functions produce the artwork.
 
 The application files carry AI-assistance and GPL headers. Unmodified library code is credited separately in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+The final generic error windows were replaced with a custom thermal-receipt composition. It uses the round's collected items and elapsed time, then feeds the actual paper image into the existing datamosh effect.

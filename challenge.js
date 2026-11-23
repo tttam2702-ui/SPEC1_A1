@@ -1,21 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // AI-assisted artwork, rewritten with basic p5 drawing, arrays, loops and classes.
-// The products and messages are fictional promises of a better self.
+// The final receipt turns the collected products and elapsed time into the artwork's bill.
 let cartImage, storeBackground, meltPicture, meltSource;
 let datamosh = null;
 let products = [],
   words = [],
-  notices = [];
+  receipts = [];
 let state = "intro",
   paused = false,
   collected = 0,
   meltClicks = 0;
-let noticeFrame = 0,
-  noticeBeat = 0,
-  noticeNumber = 0;
+let receiptFrame = 0,
+  receiptBeat = 0,
+  receiptNumber = 0;
+let basket = [];
+let sessionStartedAt = 0,
+  lastCatchAt = 0;
 let returnAt = 0,
   returnEnd = 0;
-const NOTICE_BEATS = [3, 27, 41, 54, 67];
+const RECEIPT_BEATS = [3, 27, 41, 54, 67];
 // The original recording's attacks drive the restored melting engine.
 const MELT_BEATS = [
   0.025, 0.299, 0.586, 0.874, 1.161, 1.442, 1.729, 2.015, 2.302, 2.589, 2.876, 3.157, 3.444, 3.729,
@@ -34,28 +37,6 @@ const SHIRT_POINTS = [
   [75, -35],
   [35, -65],
 ];
-// Edit these short messages to change the story of the artwork.
-const NOTICE_MESSAGES = [
-  ["SELF-IMPROVEMENT UPDATE", "Your new self is ready. Your old self is still in the cart."],
-  ["IDENTITY NOT FOUND", "We searched every aisle. Have you tried being someone else?"],
-  ["CART CAPACITY EXCEEDED", "There is no more room for the person you are supposed to become."],
-  [
-    "ANOTHER BETTER YOU",
-    "A newer version of you has arrived. This version is already out of date.",
-  ],
-  ["UNEXPECTED ITEM", "An unpurchased feeling was found in the bagging area."],
-  ["FIX IN PROGRESS", "Please wait. We are fixing something that was never broken."],
-  ["SATISFACTION PENDING", "Your order was delivered. The feeling was not included."],
-  ["SPECIAL OFFER", "Buy one new identity. Get another expectation absolutely free."],
-  ["COMPARISON LOOP", "Someone else has a better version. Would you like to keep looking?"],
-  ["NOT ENOUGH, AGAIN", "You have everything you asked for. The list has become longer."],
-  ["RETURN REQUEST", "The old you has no receipt. Please keep it somewhere safe."],
-  ["PERFECTION UNAVAILABLE", "This item is out of stock. More alternatives are on the way."],
-  ["STILL PROCESSING", "Your cart is full. Why does it still feel empty?"],
-  ["ACCEPTANCE REQUIRED", "Click OK to accept yourself. Receive more things to change."],
-  ["ME-MARRT REASSURANCE", "You do not need to buy your way into being a person."],
-];
-
 function preload() {
   cartImage = loadImage("assets/cart_challenge.png");
   loadProjectSounds(["item", "start", "datamosh", "notification", "ok", "transition"]);
@@ -63,7 +44,7 @@ function preload() {
 
 function setup() {
   const canvas = makeCanvas(
-    "Falling products, a melting shopping cart and fictional artwork messages",
+    "Falling products, a melting shopping cart and a receipt for your time",
   );
   canvas.elt.tabIndex = 0;
   storeBackground = makeStoreBackground(false);
@@ -80,14 +61,16 @@ function setup() {
 function draw() {
   if (aboutOpen || paused) return;
   if (state === "intro" || state === "collect") drawShopping();
-  if (state === "melt" || state === "notifications") drawMelting();
-  if (state === "notifications") drawNotifications();
+  if (state === "melt" || state === "receipts") drawMelting();
+  if (state === "receipts") drawReceipts();
   if (state === "return") drawReturn();
   updateHud();
 }
 
 function startChallenge() {
   state = "collect";
+  sessionStartedAt = lastCatchAt = millis();
+  basket = [];
   document.getElementById("challenge-intro").hidden = true;
   document.getElementById("challenge-pause").disabled = false;
   document.getElementById("challenge-restart").disabled = false;
@@ -110,7 +93,7 @@ function restartChallenge() {
   words = [];
   datamosh = null;
   meltSource = null;
-  notices = [];
+  receipts = [];
   collected = 0;
   meltClicks = 0;
   paused = false;
@@ -139,15 +122,15 @@ function mousePressed(event) {
   if (aboutOpen || paused || mouseX < 0 || mouseX > W || mouseY < 0 || mouseY > H) return;
   if (state === "collect") catchAt(mouseX, mouseY);
   else if (state === "melt") meltAt(mouseX, mouseY);
-  else if (state === "notifications") clickNotice(mouseX, mouseY);
+  else if (state === "receipts") printAnotherMe(mouseX, mouseY);
 }
 
 function keyPressed(event) {
   if (keyCode !== ENTER || aboutOpen || paused) return;
-  if (event && ["BUTTON", "A"].includes(event.target.tagName)) return;
+  if (event && (event.repeat || ["BUTTON", "A"].includes(event.target.tagName))) return;
   if (state === "collect") catchLowest();
   else if (state === "melt") meltAt(random(100, W - 100), random(100, H - 100));
-  else if (state === "notifications") acceptLatestNotice();
+  else if (state === "receipts") printAnotherMe();
   return false;
 }
 
@@ -176,6 +159,8 @@ function catchProduct(product) {
   product.targetY = random(430, 720);
   addWord(PRODUCT_NAMES[product.kind], product.x, product.y);
   addWord("BETTER YOU?", product.x + 70, product.y + 45);
+  basket.push({ kind: product.kind, seconds: (millis() - lastCatchAt) / 1000 });
+  lastCatchAt = millis();
   collected++;
   playEffect("item", 0.3);
   if (collected === 6) beginMelt(product.x, product.y);
@@ -224,14 +209,16 @@ function drawMelting() {
   datamosh.audioTrack.tick(min(deltaTime / 1000, 0.05));
   datamosh.draw(drawingContext, min(deltaTime / 1000, 0.05), meltSource);
   drawWords();
-  if (state === "melt" && datamosh.complete) beginNotifications();
+  if (state === "melt" && datamosh.complete) beginReceipts();
 }
 
-function beginNotifications() {
-  state = "notifications";
+function beginReceipts() {
+  state = "receipts";
   document.getElementById("challenge-stage").classList.add("is-art-ending");
-  replayNotifications();
-  setStatus("Artwork messages are appearing. Click OK, or press Enter, to receive more.");
+  receipts = [];
+  receiptNumber = 0;
+  issueReceipt();
+  replayReceipts();
 }
 
 // Adapt p5.sound's playhead to the old visual engine's looping beat clock.
@@ -261,77 +248,69 @@ class MeltBeatClock {
   }
 }
 
-function replayNotifications() {
-  noticeFrame = frameCount;
-  noticeBeat = 0;
+function replayReceipts() {
+  receiptFrame = frameCount;
+  receiptBeat = 0;
   playEffect("notification", 0.35);
 }
 
-function drawNotifications() {
-  if (noticeBeat < NOTICE_BEATS.length && frameCount - noticeFrame >= NOTICE_BEATS[noticeBeat]) {
-    for (let i = 0; i < 3; i++)
-      addNotice(65 + noticeBeat * 260 + i * 22, 50 + noticeBeat * 140 + i * 24);
-    if (noticeBeat > 1) addNotice();
-    noticeBeat++;
-  }
-  for (let i = notices.length - 1; i >= 0; i--) {
-    if (notices[i].dismiss === 0) notices.splice(i, 1);
-  }
-  for (const notice of notices) notice.show();
+function issueReceipt() {
+  receiptNumber++;
+  receipts.push(new Receipt(receiptNumber));
+  trimReceipts();
+  setStatus(
+    "Your receipt lists the objects you caught and the time you spent. Print another me, or press Enter, to receive another copy.",
+  );
+}
+
+function trimReceipts() {
+  while (receipts.length > 7) receipts.shift();
+}
+
+function drawReceipts() {
+  printOnBeat();
+  for (const receipt of receipts) if (receipt.echo) receipt.show();
+  const front = currentReceipt();
+  if (front) front.show();
+  cursor(front && front.hit(mouseX, mouseY) ? HAND : ARROW);
   if (returnAt > 0 && millis() >= returnAt) beginReturn();
 }
 
-function addNotice(x = random(30, W - 490), y = random(30, H - 270)) {
-  notices.push(new Notice(x, y, noticeNumber));
-  noticeNumber++;
-  if (notices.length > 16) notices.shift();
+function printOnBeat() {
+  if (receiptBeat >= RECEIPT_BEATS.length) return;
+  if (frameCount - receiptFrame < RECEIPT_BEATS[receiptBeat]) return;
+  if (receiptBeat > 0)
+    receipts.splice(max(0, receipts.length - 1), 0, new Receipt(++receiptNumber, true));
+  receiptBeat++;
+  trimReceipts();
 }
 
-function clickNotice(x, y) {
-  for (let i = notices.length - 1; i >= 0; i--) {
-    if (notices[i].hit(x, y)) {
-      acceptNotice(notices[i]);
-      return;
-    }
-    if (notices[i].contains(x, y)) return;
+function currentReceipt() {
+  for (let i = receipts.length - 1; i >= 0; i--) {
+    if (!receipts[i].echo) return receipts[i];
   }
+  return null;
 }
 
-function acceptLatestNotice() {
-  for (let i = notices.length - 1; i >= 0; i--) {
-    if (notices[i].dismiss === -1) {
-      acceptNotice(notices[i]);
-      return;
-    }
-  }
-}
-
-function acceptNotice(notice) {
-  if (notice.dismiss !== -1) return;
-  notice.dismiss = 12;
+function printAnotherMe(x, y) {
+  const receipt = currentReceipt();
+  if (!receipt || !receipt.ready()) return;
+  if (x !== undefined && !receipt.hit(x, y)) return;
   if (returnAt === 0) returnAt = millis() + 12000;
-  meltNoticeImage(notice);
+  receipt.paid = true;
+  receipt.show();
+  meltReceiptImage(receipt);
+  receipt.moveAside();
   playEffect("ok", 0.35);
-  addNotice();
-  addNotice();
-  replayNotifications();
-}
-
-function meltNoticeImage(notice) {
-  datamosh.meltNotification({
-    title: notice.words[0],
-    message: notice.words[1],
-    x: notice.x / W,
-    y: notice.y / H,
-    width: 460 / W,
-    height: 235 / H,
-  });
+  issueReceipt();
+  replayReceipts();
 }
 
 function beginReturn() {
   state = "return";
   returnEnd = millis() + 1900;
-  for (const notice of notices.slice(-14)) meltNoticeImage(notice);
+  const receipt = currentReceipt();
+  if (receipt) meltReceiptImage(receipt);
   datamosh.draw(drawingContext, 0);
   meltPicture = get();
   stopSounds();
@@ -362,7 +341,9 @@ function updateHud() {
   stage.dataset.mode = state;
   stage.dataset.collected = collected;
   stage.dataset.damageHits = meltClicks;
-  stage.dataset.notifications = notices.length;
+  stage.dataset.receipts = receipts.length;
+  stage.dataset.printedCopies = receiptNumber;
+  stage.dataset.receiptReady = String(Boolean(currentReceipt()?.ready()));
   stage.dataset.damageCoverage = datamosh ? datamosh.coverage.toFixed(3) : "0";
   stage.dataset.datamoshBeats = datamosh ? datamosh.beatCount : 0;
 }
@@ -459,76 +440,4 @@ function drawPlant() {
   fill("#EE2724");
   triangle(-50, 20, 50, 20, 0, 90);
   rect(-55, 15, 110, 15);
-}
-
-class Notice {
-  constructor(x, y, number) {
-    this.x = constrain(x, 15, W - 475);
-    this.y = constrain(y, 15, H - 250);
-    this.words = NOTICE_MESSAGES[number % NOTICE_MESSAGES.length];
-    this.dismiss = -1;
-  }
-
-  show() {
-    push();
-    translate(this.x, this.y);
-    if (this.dismiss > 0) translate(random(-18, 18), random(-5, 5));
-    this.drawPanel();
-    this.drawMessage();
-    this.drawButton();
-    pop();
-    if (this.dismiss > 0) this.dismiss--;
-  }
-
-  drawPanel() {
-    stroke("#FFFFFF");
-    strokeWeight(3);
-    fill("#CACACA");
-    rect(0, 0, 460, 235);
-    noStroke();
-    fill("#0714AD");
-    rect(5, 5, 450, 36);
-    fill("#FFFF00");
-    triangle(35, 65, 15, 105, 55, 105);
-  }
-
-  drawMessage() {
-    noStroke();
-    textAlign(LEFT, TOP);
-    textStyle(BOLD);
-    textSize(19);
-    fill("#FFFFFF");
-    text(this.words[0], 12, 13);
-    fill("#111111");
-    textSize(23);
-    text("!", 31, 78);
-    textStyle(NORMAL);
-    text(this.words[1], 75, 64, 365, 100);
-  }
-
-  drawButton() {
-    fill("#CACACA");
-    stroke("#111111");
-    strokeWeight(2);
-    rect(178, 180, 104, 37);
-    fill("#111111");
-    noStroke();
-    textSize(21);
-    textAlign(CENTER, CENTER);
-    text("OK", 230, 199);
-  }
-
-  hit(x, y) {
-    return (
-      this.dismiss === -1 &&
-      x > this.x + 178 &&
-      x < this.x + 282 &&
-      y > this.y + 180 &&
-      y < this.y + 217
-    );
-  }
-
-  contains(x, y) {
-    return x > this.x && x < this.x + 460 && y > this.y && y < this.y + 235;
-  }
 }

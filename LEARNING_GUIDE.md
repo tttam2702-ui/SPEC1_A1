@@ -19,7 +19,7 @@ Read the basic flow in `common.js`, `sketch.js` and `challenge.js` first. Read t
 | Boolean values, equality and `if`/`else`   | Conditions decide whether an object hit an edge, the mouse is over an item, or the challenge should change stage.                                                                                      |
 | Random numbers, rounding and array indices | Random numbers choose clothing variants. A random array selection picks a colour or phrase. p5's `floor()` rounds a number down, like JavaScript's `Math.floor()`, so it can identify one array entry. |
 | Incrementing and loops                     | A loop draws every item or several glitch strips. Adding speed to position moves an object a little each frame.                                                                                        |
-| Arrays                                     | Lists hold falling products, messages and notifications. Adding another entry lets the program create more of them.                                                                                    |
+| Arrays                                     | Lists hold falling products, messages and printed receipts. Adding another entry lets the program create more of them.                                                                                 |
 | Functions                                  | Named steps such as drawing, moving or playing a sound keep repeated code in one place.                                                                                                                |
 | Objects, classes, properties and methods   | One item stores its own position, size and speed. Its methods update or draw that item. A class creates several items with the same structure.                                                         |
 | Drawing and colour                         | `rect()`, `ellipse()`, `line()`, shapes and text make the interface. Fill and stroke colours use the project's bright palette.                                                                         |
@@ -49,7 +49,7 @@ The p5.sound addon handles audio playback. `MeltBeatClock` reads its playhead so
 
 **Melting:** `ChallengeDatamosh` keeps copies of the picture on hidden canvases. It recolours pixels, moves small fragments and stretches strips downward. The next frame reuses the damaged picture, so the melt keeps building. This advanced image effect simulates datamoshing; it does not corrupt a video file.
 
-**Notifications:** each window is stored as an object in an array. Drawing all entries creates the overlapping stack. A mouse click inside an **OK** button adds more windows.
+**Printed receipts:** each caught object adds a row and catch interval to the `basket` array. `Receipt` draws a paper slip, barcode and total time. Extra slips form a stack; **PRINT ANOTHER ME** creates another copy and melts the stamped paper into the background.
 
 **Time:** `millis()` gives the time since the sketch started. Comparing it with a saved start time lets the artwork wait before returning to the store. It uses the same basic idea as comparing two numbers in an `if` statement.
 
@@ -72,8 +72,8 @@ The p5.sound addon handles audio playback. `MeltBeatClock` reads its playhead so
 | `Product.update()` and `Product.show()`                                        | Adds speed to position, or moves a caught item toward the cart; then draws its shape.                   |
 | `drawShirt()`, `drawBook()`, `drawBottle()`, `drawHeadphones()`, `drawPlant()` | Builds products from p5 shapes and coordinates.                                                         |
 | `drawWords()`                                                                  | Updates a small label's position and upward/downward speed inside a loop.                               |
-| `Notice.show()` and `Notice.hit()`                                             | Draws a message window and tests whether its OK button was clicked.                                     |
-| `acceptNotice()` and `beginReturn()`                                           | Saves a deadline using `millis()`: 12 seconds after the first OK, then a 1.9-second transition.         |
+| `Receipt.show()` and `Receipt.hit()` in `challenge-receipts.js`                | Draws the custom receipt and checks its print button.                                                   |
+| `printAnotherMe()` and `beginReturn()`                                         | Saves a deadline using `millis()`: 12 seconds after the first print, then a 1.9-second transition.      |
 
 ## Advanced visual modules
 
