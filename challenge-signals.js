@@ -2,6 +2,8 @@
 // AI-assisted, revised for ME-MARRT: generative identity warnings over the original melt.
 // The supplied reference guides the red hexagons and hazard stripes; all labels are project-specific.
 const SIGNAL_WORDS = ["MORE", "AGAIN", "NEW ME", "WANT", "NEED", "NOT YET"];
+const ALERT_MESSAGE = "ALERT / CLICK A HEXAGON / TRY ANOTHER YOU / ";
+const LOOP_MESSAGE = "WANT > NEED > WANT / THE NEXT YOU IS NEVER THE LAST / ";
 
 function buildSignals() {
   signals = [];
@@ -51,6 +53,8 @@ class WarningSignal {
   }
 
   update() {
+    // Hold a hovered sign still so the visitor can click its visible shape.
+    if (this.hit(mouseX, mouseY)) return;
     if (frameCount % this.changeEvery === 0) this.scatter();
     this.x += (this.targetX - this.x) * 0.035;
     this.y += (this.targetY - this.y) * 0.035;
@@ -65,9 +69,19 @@ class WarningSignal {
     push();
     translate(this.x + random(-jitter, jitter), this.y);
     rotate(this.angle);
+    this.drawClickRing();
     this.drawPanel();
     this.drawLabel();
     pop();
+  }
+
+  // A slow pulse suggests an active control even before the visitor hovers.
+  drawClickRing() {
+    const hovered = this.hit(mouseX, mouseY);
+    noFill();
+    stroke(255, 255, 0, hovered ? 255 : 90 + 55 * sin(frameCount * 0.06 + this.number));
+    strokeWeight(hovered ? 3 : 1);
+    this.hexagon(hovered ? 1.08 : 1.04);
   }
 
   drawPanel() {
@@ -118,9 +132,19 @@ class WarningSignal {
     textFont("monospace");
     textSize(max(10, this.h * 0.055));
     text("SELF / " + String(this.number).padStart(3, "0"), 0, -this.h * 0.3);
-    text(this.word === "ME?" ? "TOUCH TO REPEAT" : "WANT > NEED > WANT", 0, this.h * 0.29);
     const y = -this.h * 0.16;
     triangle(-5, y, 5, y, 0, y - 8);
+    this.drawClickHint();
+  }
+
+  drawClickHint() {
+    fill("#FFFF00");
+    noStroke();
+    rect(-this.w * 0.34, this.h * 0.23, this.w * 0.68, 25, 3);
+    fill("#090203");
+    textStyle(BOLD);
+    textSize(14);
+    text("CLICK TO CHANGE", 0, this.h * 0.23 + 12.5);
   }
 
   // Rotate the mouse back into the panel's coordinates, then test the six-sided outline.
@@ -132,12 +156,6 @@ class WarningSignal {
     const localY = abs(-dx * sin(this.angle) + dy * cos(this.angle));
     return localY <= this.h / 2 && localX <= this.w / 2 - (localY * this.w * 0.32) / this.h;
   }
-}
-
-// Do not cover or dim the datamosh: the original engine has already drawn this frame.
-function drawSignalField() {
-  drawSignalConnections();
-  drawSignalCaption();
 }
 
 function drawSignalConnections() {
@@ -159,19 +177,27 @@ function drawHazardBar(x, y, w) {
   }
 }
 
-function drawSignalCaption() {
+// Draw two narrow alert ribbons above the signs, leaving the melt visible between them.
+function drawSignalTickers() {
+  drawAlertTicker(ALERT_MESSAGE, 48, 92, "#FFFF00", "#090203");
+  drawAlertTicker(LOOP_MESSAGE, 1000, -72, "#EE2724", "#090203");
+}
+
+// Repeat one measured phrase: modulo wraps it smoothly without a blank gap.
+function drawAlertTicker(message, y, speed, paperColour, inkColour) {
+  push();
   noStroke();
-  fill(0, 220);
-  rect(690, 60, 540, 38);
-  rect(610, 1015, 700, 38);
-  textFont("monospace");
+  fill(paperColour);
+  rect(0, y, W, 48);
+  fill(inkColour);
+  textFont("Impact");
   textStyle(NORMAL);
-  textSize(16);
-  textAlign(CENTER, CENTER);
-  fill("#EE2724");
-  text("ME-MARRT / SELF OPTIMISATION LOOP", 960, 79);
-  fill("#FFFF00");
-  text("YOU ARE STILL HERE.    WHAT ARE YOU TRYING TO REPLACE?", 960, 1034);
+  textSize(30);
+  textAlign(LEFT, CENTER);
+  const step = textWidth(message);
+  const offset = (((millis() - signalStartedAt) / 1000) * speed) % step;
+  for (let x = -step - offset; x < W + step; x += step) text(message, x, y + 24);
+  pop();
 }
 
 // A short click tears the signals themselves; the original melt continues underneath.

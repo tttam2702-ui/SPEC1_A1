@@ -52,7 +52,7 @@ Start with [LEARNING_GUIDE.md](LEARNING_GUIDE.md). It separates the class-level 
 
 ## The warning-field ending
 
-The original datamosh stays visible and keeps melting across the whole background. Red and black hexagons appear at random positions, with varied sizes and angles. Each signal moves toward new random points on its own rhythm; yellow hazard stripes and thin connecting lines move with them. The labels **MORE**, **AGAIN**, **ME?** and **NOT YET** connect the image to the pressure to keep buying a new identity. A touch breaks the image briefly, sends the touched area into the existing melt and creates more signs. The visible signals are capped at 32.
+The original datamosh stays visible and keeps melting across the whole background. Red and black hexagons appear at random positions, with varied sizes and angles. Each signal moves toward new random points on its own rhythm; yellow hazard stripes and thin connecting lines move with them. The labels **MORE**, **AGAIN**, **ME?** and **NOT YET** connect the image to the pressure to keep buying a new identity. Every sign has a pulsing outline and a yellow **CLICK TO CHANGE** label. Hovering turns it yellow and holds it still for clicking. Two alert ribbons scroll in opposite directions above the scene. A touch breaks the image briefly, sends the touched area into the existing melt and creates more signs. The visible signals are capped at 32.
 
 ## Licences and credits
 

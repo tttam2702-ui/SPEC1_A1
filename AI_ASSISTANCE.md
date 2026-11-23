@@ -18,3 +18,5 @@ The project is not presented as entirely class-level code. The comments and [LEA
 The application files carry AI-assistance and GPL headers. Unmodified library code is credited separately in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 The final error windows and receipt experiment were replaced with a generative warning field. The supplied reference informed the red hexagonal geometry and yellow hazard stripes. The project-specific text and interactive composition were coded with p5 shapes and randomized positions, sizes, angles and movement targets. The original full-colour melt remains visible behind them; touched screen fragments feed into the unchanged datamosh module.
+
+The warning controls were revised with visible click labels, a pulsing outline and a hover pause. Repeating alert ribbons use text width, elapsed time, loops and remainder for continuous scrolling.

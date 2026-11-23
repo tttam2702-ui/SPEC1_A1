@@ -254,10 +254,11 @@ function replaySignals() {
 }
 
 function drawSignals() {
-  drawSignalField();
+  drawSignalConnections();
   addSignalsOnBeat();
   for (const signal of signals) signal.show();
   drawSignalGlitch();
+  drawSignalTickers();
   cursor(signalAt(mouseX, mouseY) ? HAND : ARROW);
   if (returnAt > 0 && millis() >= returnAt) beginReturn();
 }
