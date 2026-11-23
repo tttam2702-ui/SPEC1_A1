@@ -1,956 +1,506 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// AI-assisted project implementation, revised into named scene, input and vector helpers.
-// p5 paints the artwork; native buttons provide pointer and keyboard interaction.
-const CHALLENGE_CANVAS_LABELS = {
-  collect: "A shopping cart with falling, collectable objects",
-  melting: "Click different areas to glitch the picture and make its pixels melt downward",
-  notifications: "A continuously melting collage of the cart, objects and error-window fragments",
-};
-const CHALLENGE_BACKGROUND_STOPS = [
-  [0, "#FF2396"],
-  [0.1, "#FF8423"],
-  [0.24, "#FFFF00"],
-  [0.79, "#FFFF00"],
-  [0.91, "#FF8423"],
-  [1, "#FF2396"],
+// AI-assisted artwork, rewritten with basic p5 drawing, arrays, loops and classes.
+// The products and messages are fictional promises of a better self.
+let cartImage, storeBackground, meltPicture;
+let products = [],
+  words = [],
+  patches = [],
+  notices = [];
+let state = "intro",
+  paused = false,
+  collected = 0,
+  meltClicks = 0;
+let noticeFrame = 0,
+  noticeBeat = 0,
+  noticeNumber = 0;
+let returnAt = 0,
+  returnEnd = 0;
+const NOTICE_BEATS = [3, 27, 41, 54, 67];
+const PRODUCT_NAMES = ["OLD CLOTHES", "SELF HELP BOOK", "SKINCARE", "HEADPHONES", "PLANT"];
+const SHIRT_POINTS = [
+  [-35, -65],
+  [-75, -35],
+  [-52, 0],
+  [-32, -12],
+  [-36, 65],
+  [36, 65],
+  [32, -12],
+  [52, 0],
+  [75, -35],
+  [35, -65],
 ];
-const CHALLENGE_BASKET_POINTS = [
-  [425, 140],
-  [890, 140],
-  [990, 807],
-  [365, 807],
+// Edit these short messages to change the story of the artwork.
+const NOTICE_MESSAGES = [
+  ["SELF-IMPROVEMENT UPDATE", "Your new self is ready. Your old self is still in the cart."],
+  ["IDENTITY NOT FOUND", "We searched every aisle. Have you tried being someone else?"],
+  ["CART CAPACITY EXCEEDED", "There is no more room for the person you are supposed to become."],
+  [
+    "ANOTHER BETTER YOU",
+    "A newer version of you has arrived. This version is already out of date.",
+  ],
+  ["UNEXPECTED ITEM", "An unpurchased feeling was found in the bagging area."],
+  ["FIX IN PROGRESS", "Please wait. We are fixing something that was never broken."],
+  ["SATISFACTION PENDING", "Your order was delivered. The feeling was not included."],
+  ["SPECIAL OFFER", "Buy one new identity. Get another expectation absolutely free."],
+  ["COMPARISON LOOP", "Someone else has a better version. Would you like to keep looking?"],
+  ["NOT ENOUGH, AGAIN", "You have everything you asked for. The list has become longer."],
+  ["RETURN REQUEST", "The old you has no receipt. Please keep it somewhere safe."],
+  ["PERFECTION UNAVAILABLE", "This item is out of stock. More alternatives are on the way."],
+  ["STILL PROCESSING", "Your cart is full. Why does it still feel empty?"],
+  ["ACCEPTANCE REQUIRED", "Click OK to accept yourself. Receive more things to change."],
+  ["ME-MARRT REASSURANCE", "You do not need to buy your way into being a person."],
 ];
-const CHALLENGE_ICON_METHODS = {
-  clothes: "drawClothes",
-  book: "drawBook",
-  journal: "drawBook",
-  skincare: "drawSkincare",
-  shoe: "drawShoe",
-  bottle: "drawBottle",
-  headphones: "drawHeadphones",
-  plant: "drawPlant",
-};
-const CHALLENGE_VECTOR_POINTS = {
-  // Static path coordinates keep each vector's drawing order easy to read.
-  clothesHem: [
-    [84, 200],
-    [172, 200],
-  ],
-  bookSpine: [
-    [69, 40],
-    [69, 194],
-  ],
-  bookPages: [
-    [80, 201],
-    [202, 201],
-    [202, 209],
-    [84, 209],
-  ],
-  bookUnderline: [
-    [93, 153],
-    [156, 153],
-  ],
-  skincareSpark: [
-    [103, 42],
-    [103, 27],
-    [120, 34],
-  ],
-  skincareRay: [
-    [158, 47],
-    [169, 32],
-  ],
-  shoeLaces: [
-    [111, 137],
-    [95, 152],
-    [126, 144],
-    [114, 160],
-    [143, 152],
-  ],
-  shoeToe: [
-    [152, 171],
-    [184, 168],
-    [196, 176],
-  ],
-  headphoneNote: [
-    [113, 142],
-    [113, 182],
-    [140, 172],
-    [140, 132],
-  ],
-  plantStem: [
-    [128, 169],
-    [128, 54],
-  ],
-  plantLeaves: [
-    [87, 82, -0.7],
-    [162, 60, 0.7],
-    [91, 128, -0.7],
-    [164, 112, 0.7],
-  ],
 
-  clothes: [
-    [89, 47],
-    [106, 61],
-    [150, 61],
-    [167, 47],
-    [222, 82],
-    [199, 126],
-    [177, 114],
-    [181, 214],
-    [75, 214],
-    [79, 114],
-    [57, 126],
-    [34, 82],
-  ],
-  bookBack: [
-    [57, 40],
-    [182, 40],
-    [211, 63],
-    [211, 218],
-    [78, 218],
-    [48, 194],
-  ],
-  bookCover: [
-    [48, 40],
-    [180, 40],
-    [180, 194],
-    [48, 194],
-  ],
-  shoe: [
-    [30, 167],
-    [47, 104],
-    [88, 96],
-    [123, 132],
-    [165, 145],
-    [213, 155],
-    [228, 187],
-    [225, 207],
-    [28, 207],
-    [23, 186],
-  ],
-  shoeSole: [
-    [26, 185],
-    [226, 185],
-    [225, 207],
-    [28, 207],
-  ],
-  shoeHeel: [
-    [52, 110],
-    [78, 109],
-    [94, 131],
-    [48, 145],
-  ],
-  plantPot: [
-    [74, 163],
-    [182, 163],
-    [167, 223],
-    [89, 223],
-  ],
-};
+function preload() {
+  cartImage = loadImage("assets/cart_challenge.png");
+  loadProjectSounds(["item", "start", "datamosh", "notification", "ok", "transition"]);
+}
 
-class ChallengeScene {
-  constructor() {
-    this.initializeSceneData();
-    this.findElements();
-    this.initializeRuntime();
-    this.initializeAudio();
-    this.initializeFlow();
-    this.showOfferContext();
-    this.bindEvents();
+function setup() {
+  const canvas = makeCanvas(
+    "Falling products, a melting shopping cart and fictional artwork messages",
+  );
+  canvas.elt.tabIndex = 0;
+  storeBackground = makeStoreBackground(false);
+  textFont("Arial");
+  frameRate(60);
+  document.getElementById("challenge-start").onclick = startChallenge;
+  document.getElementById("challenge-pause").onclick = pauseChallenge;
+  document.getElementById("challenge-restart").onclick = restartChallenge;
+  document.getElementById("challenge-start").focus();
+}
+
+function draw() {
+  if (aboutOpen || paused) return;
+  if (state === "intro" || state === "collect") drawShopping();
+  if (state === "melt" || state === "notifications") drawMelting();
+  if (state === "notifications") drawNotifications();
+  if (state === "return") drawReturn();
+  updateHud();
+}
+
+function startChallenge() {
+  state = "collect";
+  document.getElementById("challenge-intro").hidden = true;
+  document.getElementById("challenge-pause").disabled = false;
+  document.getElementById("challenge-restart").disabled = false;
+  for (let i = 0; i < 3; i++) products.push(new Product(-100 - i * 180));
+  playEffect("start", 0.35);
+  setStatus("Click falling objects. Enter catches the lowest object.");
+  document.querySelector("canvas").focus();
+}
+
+function pauseChallenge() {
+  paused = !paused;
+  if (paused) stopSounds();
+  document.getElementById("challenge-pause").textContent = paused ? "RESUME ▶" : "PAUSE";
+  document.getElementById("challenge-pause").setAttribute("aria-pressed", String(paused));
+}
+
+function restartChallenge() {
+  stopSounds();
+  products = [];
+  words = [];
+  patches = [];
+  notices = [];
+  collected = 0;
+  meltClicks = 0;
+  paused = false;
+  returnAt = 0;
+  document.getElementById("challenge-stage").classList.remove("is-art-ending");
+  document.getElementById("challenge-pause").textContent = "PAUSE";
+  document.getElementById("challenge-pause").setAttribute("aria-pressed", "false");
+  startChallenge();
+}
+
+function drawShopping() {
+  image(storeBackground, 0, 0, W, H);
+  const cartWidth = (H * cartImage.width) / cartImage.height;
+  image(cartImage, (W - cartWidth) / 2, 0, cartWidth, H);
+  if (state === "collect" && frameCount % 24 === 0) products.push(new Product(-110));
+  for (let i = products.length - 1; i >= 0; i--) {
+    products[i].update();
+    products[i].show();
+    if (products[i].y > H + 200) products.splice(i, 1);
   }
+  drawWords();
+}
 
-  initializeSceneData() {
-    this.W = CHALLENGE_WIDTH;
-    this.H = CHALLENGE_HEIGHT;
-    this.round = new ChallengeRound();
-    this.buttons = new Map();
-    this.icons = new Map();
-    this.cartBox = { width: (1364 / 1080) * 1120, height: 1120, y: -40 };
-    this.cartBox.x = (this.W - this.cartBox.width) / 2;
-    this.vectors = new ChallengeVectors();
-  }
+function mousePressed(event) {
+  if (event && event.target.tagName !== "CANVAS") return;
+  if (aboutOpen || paused || mouseX < 0 || mouseX > W || mouseY < 0 || mouseY > H) return;
+  if (state === "collect") catchAt(mouseX, mouseY);
+  else if (state === "melt") meltAt(mouseX, mouseY);
+  else if (state === "notifications") clickNotice(mouseX, mouseY);
+}
 
-  findElements() {
-    this.stage = document.getElementById("challenge-stage");
-    this.targets = document.getElementById("challenge-targets");
-    this.intro = document.getElementById("challenge-intro");
-    this.start = document.getElementById("challenge-start");
-    this.pause = document.getElementById("challenge-pause");
-    this.restart = document.getElementById("challenge-restart");
-    this.counter = document.getElementById("challenge-count");
-    this.timer = document.getElementById("challenge-time");
-    this.mode = document.getElementById("challenge-mode");
-    this.melt = document.getElementById("challenge-melt");
-  }
+function keyPressed(event) {
+  if (keyCode !== ENTER || aboutOpen || paused) return;
+  if (event && ["BUTTON", "A"].includes(event.target.tagName)) return;
+  if (state === "collect") catchLowest();
+  else if (state === "melt") meltAt(random(100, W - 100), random(100, H - 100));
+  else if (state === "notifications") acceptLatestNotice();
+  return false;
+}
 
-  initializeRuntime() {
-    this.ready = false;
-    this.lastHud = "";
-    this.aboutPaused = false;
-    this.ending = null;
-    this.soundCounts = { item: 0, notification: 0, ok: 0 };
-  }
-
-  initializeAudio() {
-    this.sound = new ChallengeAudio({
-      onState: (state) => {
-        this.stage.dataset.audioState = state;
-      },
-      onPlay: (name) => this.recordSound(name),
-    });
-  }
-
-  recordSound(name) {
-    this.soundCounts[name] = (this.soundCounts[name] || 0) + 1;
-    const key = "audio" + name[0].toUpperCase() + name.slice(1);
-    this.stage.dataset[key] = String(this.soundCounts[name]);
-  }
-
-  initializeFlow() {
-    this.notices = new ChallengeNotifications(this.stage, {
-      audio: this.sound,
-      onAccept: (packet) => this.acceptNotice(packet),
-    });
-    this.returnTransition = new ChallengeReturn(this.stage, {
-      duration: 1900,
-      getCanvas: () => this.canvas,
-      onBegin: () => this.beginReturn(),
-    });
-  }
-
-  acceptNotice(packet) {
-    this.ending?.meltNotification(packet);
-    this.returnTransition.arm();
-  }
-
-  beginReturn() {
-    if (document.body.classList.contains("about-open"))
-      document.querySelector(".about-close")?.click();
-    this.notices.setExiting?.();
-    this.sound.stopAll();
-    this.sound.playTransition();
-    this.meltVisibleNotices();
-    this.ending.draw(drawingContext, 0);
-    this.round.paused = true;
-    this.setStatus("Returning to ME-MARRT.");
-  }
-
-  meltVisibleNotices() {
-    const stageRect = this.stage.getBoundingClientRect();
-    for (const record of this.notices.windows.slice(-14)) this.meltNoticeRecord(record, stageRect);
-  }
-
-  meltNoticeRecord(record, stageRect) {
-    const bounds = record.element.getBoundingClientRect();
-    this.ending.meltNotification({
-      title: record.title,
-      message: record.message,
-      x: (bounds.left - stageRect.left) / stageRect.width,
-      y: (bounds.top - stageRect.top) / stageRect.height,
-      width: bounds.width / stageRect.width,
-      height: bounds.height / stageRect.height,
-    });
-  }
-
-  showOfferContext() {
-    const offer = new URLSearchParams(location.search).get("label");
-    if (!offer) return;
-    const context = document.getElementById("challenge-offer");
-    context.textContent = "TODAY'S OFFER: " + offer.slice(0, 160);
-    context.hidden = false;
-  }
-
-  bindEvents() {
-    window.setup = () => this.setup();
-    window.draw = () => this.draw();
-    addEventListener("resize", () => this.positionIntro());
-    addEventListener("scroll", () => this.positionIntro(), { passive: true });
-    this.intro.addEventListener("cancel", (event) => event.preventDefault());
-    this.bindControls();
-    document.addEventListener("site:aboutchange", (event) => this.aboutChanged(event));
-    addEventListener("pagehide", () => this.sound.stopAll());
-    this.bindMelting();
-  }
-
-  bindControls() {
-    this.start.addEventListener("click", () => this.startRound());
-    this.pause.addEventListener("click", () => this.togglePause());
-    this.restart.addEventListener("click", () => this.restartRound());
-  }
-
-  bindMelting() {
-    this.melt.addEventListener("pointerdown", (event) => this.meltPointer(event));
-    this.melt.addEventListener("click", (event) => {
-      if (event.detail === 0) this.damage(Math.random() * this.W, Math.random() * this.H);
-    });
-  }
-
-  surface() {
-    const result = document.createElement("canvas");
-    result.width = this.W;
-    result.height = this.H;
-    return result;
-  }
-
-  setup() {
-    this.prepareCanvas();
-    this.scene = this.surface();
-    this.sceneContext = this.scene.getContext("2d");
-    this.background = this.surface();
-    this.paintBackground();
-    this.showIntro();
-    this.loadCart();
-    this.syncHud();
-  }
-
-  prepareCanvas() {
-    pixelDensity(1);
-    const renderer = createCanvas(this.W, this.H);
-    renderer.parent(this.stage);
-    this.canvas = renderer.elt;
-    this.setCanvasLabel("collect");
-    frameRate(60);
-  }
-
-  paintBackground() {
-    const ctx = this.background.getContext("2d");
-    const gradient = ctx.createLinearGradient(0, 0, 0, this.H);
-    CHALLENGE_BACKGROUND_STOPS.forEach(([position, color]) =>
-      gradient.addColorStop(position, color),
-    );
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, this.W, this.H);
-  }
-
-  showIntro() {
-    this.intro.showModal();
-    this.positionIntro();
-    document.getElementById("challenge-intro-title").focus({ preventScroll: true });
-    this.intro.querySelector(".challenge-intro-card").scrollTop = 0;
-  }
-
-  loadCart() {
-    this.cart = loadImage(
-      "assets/cart_challenge.png",
-      (loaded) => this.cartReady(loaded),
-      () => this.cartFailed(),
-    );
-  }
-
-  cartReady(cart) {
-    this.cart = cart;
-    this.ready = true;
-    this.start.disabled = false;
-    this.start.textContent = "LET'S GO SHOPPING →";
-  }
-
-  cartFailed() {
-    this.start.disabled = false;
-    this.start.textContent = "RELOAD CART ↻";
-    this.intro.querySelector(".challenge-disclaimer").textContent =
-      "The cart image could not load. Reload to try again.";
-  }
-
-  draw() {
-    if (!this.sceneContext || this.round.paused) return;
-    const dt = Math.min(deltaTime / 1000, 0.05);
-    if (this.round.mode === "notifications") this.drawNotifications(dt);
-    else this.drawRound(dt);
-  }
-
-  drawNotifications(dt) {
-    this.ending.draw(drawingContext, dt);
-    this.syncMeltBeat();
-    this.notices.tick(dt);
-  }
-
-  drawRound(dt) {
-    this.round.tick(dt);
-    this.renderScene();
-    if (this.ending) this.drawMelt(dt);
-    else drawingContext.drawImage(this.scene, 0, 0);
-    this.syncTargets();
-    this.syncHud();
-  }
-
-  drawMelt(dt) {
-    this.ending.draw(drawingContext, dt, this.scene);
-    this.syncMeltBeat();
-    this.stage.dataset.damageCoverage = this.ending.coverage.toFixed(3);
-    this.stage.dataset.damageHits = String(this.ending.hits);
-    if (this.ending.complete) this.beginNotifications();
-  }
-
-  positionIntro() {
-    if (!this.intro.open) return;
-    const bounds = this.introBounds();
-    this.intro.style.left = bounds.left + "px";
-    this.intro.style.top = bounds.top + "px";
-    this.intro.style.width = bounds.width + "px";
-    this.intro.style.height = bounds.height + "px";
-  }
-
-  introBounds() {
-    const rect = this.stage.getBoundingClientRect();
-    const barBottom = document.querySelector(".site-bar")?.getBoundingClientRect().bottom || 0;
-    const top = Math.max(rect.top, barBottom, 0);
-    const bottom = Math.min(rect.bottom, innerHeight);
-    return {
-      left: Math.max(0, rect.left),
-      top,
-      width: Math.min(rect.width, innerWidth),
-      height: Math.max(0, this.introHeight(rect, top, bottom)),
-    };
-  }
-
-  introHeight(rect, top, bottom) {
-    return rect.width < 700
-      ? Math.max(bottom - top, Math.min(460, innerHeight - top))
-      : bottom - top;
-  }
-
-  startRound() {
-    if (!this.ready) {
-      location.reload();
+function catchAt(x, y) {
+  for (let i = products.length - 1; i >= 0; i--) {
+    if (!products[i].caught && dist(x, y, products[i].x, products[i].y) < 95) {
+      catchProduct(products[i]);
       return;
     }
-    void this.sound.unlock();
-    this.sound.playStart();
-    this.intro.close();
-    this.round.start();
-    this.pause.disabled = this.restart.disabled = false;
-    this.pause.focus({ preventScroll: true });
-    this.syncTargets();
-    this.syncHud();
-  }
-
-  togglePause() {
-    this.round.paused = !this.round.paused;
-    if (this.round.paused) this.sound.pause();
-    else this.sound.resume();
-    this.syncTargets();
-    this.syncHud();
-  }
-
-  restartRound() {
-    this.resetRoundState();
-    this.resetArtView();
-    this.sound.stopAll();
-    this.sound.resume();
-    this.returnTransition.reset();
-    this.resetReadouts();
-    this.syncTargets();
-    this.syncHud();
-  }
-
-  resetRoundState() {
-    this.round.reset();
-    this.round.start();
-    this.aboutPaused = false;
-    this.ending = null;
-  }
-
-  resetArtView() {
-    this.stage.classList.remove("is-art-ending", "is-corrupting");
-    this.targets.inert = false;
-    this.notices.reset();
-    this.melt.hidden = true;
-  }
-
-  resetReadouts() {
-    this.setCanvasLabel("collect");
-    this.stage.dataset.damageCoverage = "0";
-    this.stage.dataset.damageHits = "0";
-    this.setStatus("");
-  }
-
-  aboutChanged(event) {
-    if (event.detail.open) this.pauseForAbout();
-    else this.resumeAfterAbout();
-    this.syncTargets();
-    this.syncHud();
-  }
-
-  pauseForAbout() {
-    this.aboutPaused = this.round.mode !== "intro" && !this.round.paused;
-    if (!this.aboutPaused) return;
-    this.round.paused = true;
-    this.sound.pause();
-  }
-
-  resumeAfterAbout() {
-    if (this.aboutPaused) {
-      this.round.paused = false;
-      this.sound.resume();
-    }
-    this.aboutPaused = false;
-  }
-
-  collect(id) {
-    const item = this.round.collect(id);
-    if (!item) return;
-    this.sound.playItem();
-    if (this.round.mode === "corrupting") this.damage(item.x, item.y);
-    this.syncTargets();
-    this.syncHud();
-  }
-
-  damage(x, y) {
-    if (this.round.mode !== "corrupting" || this.round.paused) return;
-    this.renderScene();
-    if (!this.ending) this.initializeMelting();
-    this.ending.addDamage(x, y, this.scene);
-    this.stage.dataset.damageHits = String(this.ending.hits);
-  }
-
-  initializeMelting() {
-    this.ending = new ChallengeDatamosh(this.scene, { track: this.sound.playDatamosh() });
-    this.stage.classList.add("is-corrupting");
-    this.melt.hidden = false;
-    this.setCanvasLabel("melting");
-    this.setStatus("Every click now melts another area. Click around the picture.");
-  }
-
-  syncMeltBeat() {
-    if (this.stage.dataset.datamoshBeats === String(this.ending.beatCount)) return;
-    this.stage.dataset.datamoshBeats = String(this.ending.beatCount);
-    this.stage.dataset.datamoshCues = JSON.stringify(this.ending.beatLog);
-  }
-
-  meltPointer(event) {
-    if (event.button !== 0) return;
-    event.preventDefault();
-    const rect = this.stage.getBoundingClientRect();
-    this.damage(
-      ((event.clientX - rect.left) / rect.width) * this.W,
-      ((event.clientY - rect.top) / rect.height) * this.H,
-    );
-  }
-
-  beginNotifications() {
-    this.round.mode = "notifications";
-    this.stage.classList.add("is-art-ending");
-    this.melt.hidden = true;
-    this.targets.replaceChildren();
-    this.buttons.clear();
-    this.targets.inert = true;
-    this.pause.disabled = this.restart.disabled = true;
-    this.setCanvasLabel("notifications");
-    this.setStatus(
-      "The image has melted. Artwork notifications are appearing. Each OK creates more.",
-    );
-    this.notices.start();
-  }
-
-  syncTargets() {
-    if (this.round.mode === "notifications") return;
-    const active = new Set(this.round.items.map((item) => item.id));
-    this.removeOldTargets(active);
-    for (const item of this.round.items) this.syncTarget(item);
-  }
-
-  removeOldTargets(active) {
-    for (const [id, button] of this.buttons) {
-      if (active.has(id)) continue;
-      button.remove();
-      this.buttons.delete(id);
-    }
-  }
-
-  syncTarget(item) {
-    const button = this.buttons.get(item.id) || this.makeTarget(item);
-    button.setAttribute("aria-label", "Collect " + item.label.toLowerCase());
-    button.hidden = item.y < -item.size * 0.25 || item.y > this.H + item.size * 0.25;
-    button.disabled = this.round.paused;
-    this.positionTarget(button, item);
-  }
-
-  makeTarget(item) {
-    const button = document.createElement("button");
-    button.className = "collect-target";
-    button.type = "button";
-    button.addEventListener("pointerdown", (event) => this.collectPointer(event, item.id));
-    button.addEventListener("click", () => this.collect(item.id));
-    this.buttons.set(item.id, button);
-    this.targets.append(button);
-    return button;
-  }
-
-  collectPointer(event, id) {
-    if (event.button !== 0) return;
-    event.preventDefault();
-    this.collect(id);
-  }
-
-  positionTarget(button, item) {
-    button.style.left = (item.x / this.W) * 100 + "%";
-    button.style.top = (item.y / this.H) * 100 + "%";
-    button.style.width = (item.size / this.W) * 100 + "%";
-    button.style.height = (item.size / this.H) * 100 + "%";
-    button.style.transform = "translate(-50%,-50%) rotate(" + item.angle + "rad)";
-  }
-
-  syncHud() {
-    const signature = [this.round.collected, this.round.mode, this.round.paused].join("/");
-    if (this.lastHud !== signature) this.paintHud(signature);
-    this.timer.textContent = this.round.time.toFixed(1) + "s";
-  }
-
-  paintHud(signature) {
-    this.counter.value = String(this.round.collected).padStart(2, "0");
-    this.mode.textContent = this.modeDescription();
-    this.pause.textContent = this.round.paused ? "RESUME ▶" : "PAUSE";
-    this.pause.setAttribute("aria-pressed", String(this.round.paused));
-    this.stage.dataset.mode = this.round.mode;
-    this.stage.dataset.paused = String(this.round.paused);
-    this.lastHud = signature;
-  }
-
-  modeDescription() {
-    return this.round.mode === "corrupting"
-      ? "CLICK ANYWHERE / LET IT MELT."
-      : "CATCH THE NEXT YOU.";
-  }
-
-  setCanvasLabel(key) {
-    this.canvas.setAttribute("aria-label", CHALLENGE_CANVAS_LABELS[key]);
-  }
-
-  setStatus(text) {
-    document.getElementById("challenge-art-status").textContent = text;
-  }
-
-  basketClip(ctx) {
-    const scale = this.cartBox.height / 1080;
-    ctx.beginPath();
-    CHALLENGE_BASKET_POINTS.forEach(([x, y], index) => {
-      ctx[index ? "lineTo" : "moveTo"](this.cartBox.x + x * scale, this.cartBox.y + y * scale);
-    });
-    ctx.closePath();
-    ctx.clip();
-  }
-
-  renderScene() {
-    const ctx = this.sceneContext;
-    ctx.drawImage(this.background, 0, 0);
-    const flights = this.round.flights.map((item) => this.round.flightPose(item));
-    this.drawStoredLayer(ctx, flights);
-    this.drawCart(ctx);
-    this.drawForegroundLayer(ctx, flights);
-    this.drawParticles(ctx);
-    for (const label of this.round.labels)
-      this.vectors.drawLabel(ctx, label, this.round.time - label.born);
-  }
-
-  drawStoredLayer(ctx, flights) {
-    ctx.save();
-    this.basketClip(ctx);
-    for (const item of this.round.stored) this.drawItem(ctx, item);
-    for (const item of flights) if (item.progress > 0.7) this.drawItem(ctx, item);
-    ctx.restore();
-  }
-
-  drawCart(ctx) {
-    if (!this.ready) return;
-    const { x, y, width, height } = this.cartBox;
-    ctx.drawImage(this.cart.canvas, x, y, width, height);
-  }
-
-  drawForegroundLayer(ctx, flights) {
-    for (const item of this.round.items) this.drawItem(ctx, item);
-    for (const item of flights) if (item.progress <= 0.7) this.drawItem(ctx, item);
-  }
-
-  drawParticles(ctx) {
-    for (const particle of this.round.particles) {
-      ctx.globalAlpha = Math.max(0, 1 - (this.round.time - particle.born) / particle.life);
-      ctx.fillStyle = particle.color;
-      ctx.fillRect(particle.x, particle.y, particle.size, particle.size * 0.6);
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  drawItem(ctx, item, opacity = 1) {
-    const key = item.type + "/" + item.color;
-    if (!this.icons.has(key)) this.icons.set(key, this.vectors.make(item.type, item.color));
-    ctx.save();
-    ctx.globalAlpha = opacity;
-    ctx.translate(item.x, item.y);
-    ctx.rotate(item.angle);
-    this.paintItemSprite(ctx, this.icons.get(key), item.size);
-    ctx.restore();
-  }
-
-  paintItemSprite(ctx, sprite, size) {
-    ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
   }
 }
 
-// Flat vector products retain their colours, coordinates and layer order.
-class ChallengeVectors {
-  constructor() {
-    this.cream = "#FFF6DF";
-    this.blue = "#087CFF";
-    this.red = "#EE2724";
+function catchLowest() {
+  let lowest = null;
+  for (const product of products) {
+    if (!product.caught && (!lowest || product.y > lowest.y)) lowest = product;
   }
+  if (lowest) catchProduct(lowest);
+}
 
-  make(type, color) {
-    const result = document.createElement("canvas");
-    result.width = result.height = 256;
-    const ctx = result.getContext("2d");
-    this.prepareContext(ctx);
-    const method = CHALLENGE_ICON_METHODS[type];
-    if (method) this[method](ctx, color, type);
-    return result;
-  }
+function catchProduct(product) {
+  product.caught = true;
+  const oldColour = product.colour;
+  while (product.colour === oldColour) product.colour = random(PALETTE);
+  product.targetX = random(760, 1160);
+  product.targetY = random(430, 720);
+  addWord(PRODUCT_NAMES[product.kind], product.x, product.y);
+  addWord("BETTER YOU?", product.x + 70, product.y + 45);
+  collected++;
+  playEffect("item", 0.3);
+  if (collected === 6) beginMelt(product.x, product.y);
+}
 
-  prepareContext(ctx) {
-    ctx.lineJoin = "round";
-    ctx.lineCap = "round";
-    ctx.strokeStyle = "#111111";
-    ctx.lineWidth = 5;
-  }
+function addWord(label, x, y) {
+  words.push({ label, x, y, vy: -9, life: 55, colour: random(PALETTE) });
+}
 
-  polygon(ctx, points, fill, stroke = "#111111", lineWidth = 5) {
-    ctx.beginPath();
-    points.forEach(([x, y], index) => ctx[index ? "lineTo" : "moveTo"](x, y));
-    ctx.closePath();
-    this.fillShape(ctx, fill);
-    this.strokeShape(ctx, stroke, lineWidth);
-  }
-
-  fillShape(ctx, color) {
-    if (!color) return;
-    ctx.fillStyle = color;
-    ctx.fill();
-  }
-
-  strokeShape(ctx, color, width) {
-    if (!color) return;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width;
-    ctx.stroke();
-  }
-
-  box(ctx, x, y, width, height, fill, radius = 8) {
-    ctx.beginPath();
-    ctx.roundRect(x, y, width, height, radius);
-    ctx.fillStyle = fill;
-    ctx.fill();
-    ctx.stroke();
-  }
-
-  line(ctx, points, color = "#111111", width = 5) {
-    ctx.beginPath();
-    points.forEach(([x, y], index) => ctx[index ? "lineTo" : "moveTo"](x, y));
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width;
-    ctx.stroke();
-  }
-
-  iconText(ctx, text, x, y, font, color) {
-    ctx.fillStyle = color;
-    ctx.font = font;
-    ctx.textAlign = "center";
-    ctx.fillText(text, x, y);
-  }
-
-  drawClothes(ctx, color) {
-    this.polygon(ctx, CHALLENGE_VECTOR_POINTS.clothes, color);
-    ctx.beginPath();
-    ctx.ellipse(128, 60, 25, 16, 0, 0, Math.PI);
-    ctx.stroke();
-    this.box(ctx, 103, 105, 50, 50, this.cream, 0);
-    this.iconText(ctx, "NEW", 128, 138, "900 19px Arial", this.red);
-    this.line(ctx, CHALLENGE_VECTOR_POINTS.clothesHem, this.cream, 4);
-  }
-
-  drawBook(ctx, color, type) {
-    this.polygon(ctx, CHALLENGE_VECTOR_POINTS.bookBack, this.cream);
-    this.polygon(ctx, CHALLENGE_VECTOR_POINTS.bookCover, color);
-    this.line(ctx, CHALLENGE_VECTOR_POINTS.bookSpine);
-    this.line(ctx, CHALLENGE_VECTOR_POINTS.bookPages, "#111111", 3);
-    this.bookText(ctx, type);
-    this.bookBinding(ctx, type);
-  }
-
-  bookText(ctx, type) {
-    ctx.fillStyle = this.cream;
-    ctx.font = "900 24px Impact,Arial";
-    ctx.textAlign = "center";
-    ctx.fillText(type === "book" ? "BETTER" : "NEW ME", 125, 99);
-    ctx.fillText(type === "book" ? "YOU!" : "JOURNAL", 125, 128);
-  }
-
-  bookBinding(ctx, type) {
-    if (type === "journal") {
-      for (let y = 58; y < 185; y += 23) this.journalRing(ctx, y);
-    } else this.line(ctx, CHALLENGE_VECTOR_POINTS.bookUnderline, this.cream, 4);
-  }
-
-  journalRing(ctx, y) {
-    ctx.beginPath();
-    ctx.ellipse(55, y, 12, 5, 0, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-
-  drawSkincare(ctx, color) {
-    this.box(ctx, 62, 94, 132, 119, color, 18);
-    this.box(ctx, 56, 66, 144, 38, this.cream, 6);
-    for (let x = 69; x < 194; x += 13) this.skincareCapRidge(ctx, x);
-    this.box(ctx, 77, 125, 102, 57, this.cream, 0);
-    this.iconText(ctx, "GLOW UP", 128, 161, "900 22px Impact,Arial", "#111111");
-    this.line(ctx, CHALLENGE_VECTOR_POINTS.skincareSpark, this.red, 4);
-    this.line(ctx, CHALLENGE_VECTOR_POINTS.skincareRay, this.red, 4);
-  }
-
-  skincareCapRidge(ctx, x) {
-    this.line(
-      ctx,
-      [
-        [x, 74],
-        [x, 97],
-      ],
-      "#111111",
-      2,
-    );
-  }
-
-  drawShoe(ctx, color) {
-    this.polygon(ctx, CHALLENGE_VECTOR_POINTS.shoe, color);
-    this.polygon(ctx, CHALLENGE_VECTOR_POINTS.shoeSole, this.cream);
-    this.polygon(ctx, CHALLENGE_VECTOR_POINTS.shoeHeel, this.cream);
-    this.line(ctx, CHALLENGE_VECTOR_POINTS.shoeLaces, this.cream, 6);
-    this.line(ctx, CHALLENGE_VECTOR_POINTS.shoeToe, "#111111", 4);
-  }
-
-  drawBottle(ctx, color) {
-    this.box(ctx, 104, 27, 48, 30, this.cream, 4);
-    this.bottleOutline(ctx, color);
-    this.box(ctx, 74, 130, 109, 49, this.cream, 0);
-    this.iconText(ctx, "REFRESH", 128, 162, "900 23px Impact,Arial", this.blue);
-  }
-
-  bottleOutline(ctx, color) {
-    ctx.beginPath();
-    ctx.moveTo(102, 57);
-    ctx.lineTo(154, 57);
-    ctx.lineTo(154, 79);
-    ctx.bezierCurveTo(184, 101, 187, 116, 183, 137);
-    ctx.lineTo(183, 214);
-    ctx.quadraticCurveTo(128, 233, 73, 214);
-    ctx.lineTo(73, 137);
-    ctx.bezierCurveTo(69, 116, 72, 101, 102, 79);
-    ctx.closePath();
-    ctx.fillStyle = color;
-    ctx.fill();
-    ctx.stroke();
-  }
-
-  drawHeadphones(ctx, color) {
-    this.headphoneArch(ctx, color);
-    this.headphoneCups(ctx, color);
-    this.headphoneNotes(ctx);
-  }
-
-  headphoneArch(ctx, color) {
-    ctx.beginPath();
-    ctx.arc(128, 130, 76, Math.PI, Math.PI * 2);
-    ctx.strokeStyle = "#111111";
-    ctx.lineWidth = 30;
-    ctx.stroke();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 20;
-    ctx.stroke();
-    ctx.strokeStyle = "#111111";
-    ctx.lineWidth = 5;
-  }
-
-  headphoneCups(ctx, color) {
-    this.box(ctx, 36, 117, 43, 85, color, 15);
-    this.box(ctx, 177, 117, 43, 85, color, 15);
-    this.box(ctx, 67, 124, 19, 72, this.cream, 7);
-    this.box(ctx, 170, 124, 19, 72, this.cream, 7);
-    this.line(ctx, CHALLENGE_VECTOR_POINTS.headphoneNote, this.red, 6);
-  }
-
-  headphoneNotes(ctx) {
-    ctx.beginPath();
-    ctx.ellipse(102, 184, 12, 8, -0.3, 0, Math.PI * 2);
-    ctx.fillStyle = this.red;
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(129, 174, 12, 8, -0.3, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  drawPlant(ctx, color) {
-    this.line(ctx, CHALLENGE_VECTOR_POINTS.plantStem, "#111111", 7);
-    CHALLENGE_VECTOR_POINTS.plantLeaves.forEach((leaf) => this.drawLeaf(ctx, leaf, color));
-    this.polygon(ctx, CHALLENGE_VECTOR_POINTS.plantPot, this.red);
-    this.box(ctx, 66, 155, 124, 22, this.cream, 3);
-  }
-
-  drawLeaf(ctx, [x, y, angle], color) {
-    ctx.beginPath();
-    ctx.ellipse(x, y, 42, 19, angle, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.fill();
-    ctx.stroke();
-  }
-
-  drawLabel(ctx, label, age) {
-    if (age < 0) return;
-    ctx.save();
-    this.transformLabel(ctx, label, age);
-    ctx.font = label.large ? "900 39px Impact,Arial Narrow,Arial" : "italic 900 25px Arial";
-    const width = ctx.measureText(label.text).width + (label.large ? 30 : 22);
-    this.labelShape(ctx, label, width);
-    this.labelText(ctx, label.text);
-    ctx.restore();
-  }
-
-  transformLabel(ctx, label, age) {
-    const scale = Math.max(0.05, 1 - Math.exp(-age * 13) * Math.cos(age * 21));
-    ctx.translate(label.x, label.y - age * 76);
-    ctx.rotate(label.angle);
-    ctx.scale(scale, scale);
-    ctx.globalAlpha = Math.min(1, (label.life - age) * 5);
-  }
-
-  labelShape(ctx, label, width) {
-    if (label.large) this.polygon(ctx, this.burstPoints(width), label.color, this.cream, 3);
-    else {
-      const points = [
-        [-width / 2, -20],
-        [width / 2, -20],
-        [width / 2, 20],
-        [-width / 2, 20],
-      ];
-      this.polygon(ctx, points, label.color, this.cream, 2);
-    }
-  }
-
-  burstPoints(width) {
-    const points = [];
-    for (let i = 0; i < 32; i++) {
-      const angle = (i / 32) * Math.PI * 2;
-      const radius = i % 2 ? 0.72 : 1;
-      points.push([Math.cos(angle) * (width / 2 + 16) * radius, Math.sin(angle) * 54 * radius]);
-    }
-    return points;
-  }
-
-  labelText(ctx, text) {
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.lineJoin = "round";
-    ctx.strokeStyle = "#111111";
-    ctx.lineWidth = 5;
-    ctx.strokeText(text, 0, 1);
-    ctx.fillStyle = "#FFFF00";
-    ctx.fillText(text, 0, 1);
+function drawWords() {
+  textAlign(CENTER, CENTER);
+  textStyle(BOLD);
+  for (let i = words.length - 1; i >= 0; i--) {
+    const word = words[i];
+    word.y += word.vy;
+    word.vy += 0.32;
+    word.life--;
+    stroke(0);
+    strokeWeight(2);
+    fill(word.colour);
+    textSize(35 + sin(word.life * 0.5) * 5);
+    text(word.label, word.x, word.y);
+    if (word.life <= 0) words.splice(i, 1);
   }
 }
 
-new ChallengeScene();
+function beginMelt(x, y) {
+  drawShopping();
+  state = "melt";
+  meltPicture = get();
+  meltAt(x, y);
+  setStatus("Each click now melts another area. Click around the picture, or press Enter.");
+}
+
+function meltAt(x, y) {
+  patches.push(new MeltPatch(x, y));
+  meltClicks++;
+  if (patches.length > 24) patches.shift();
+  if (meltClicks >= 8 && state === "melt") beginNotifications();
+}
+
+// Copy narrow pieces of the photo downward, then keep the changed picture.
+function drawMelting() {
+  loopEffect("datamosh", 0.045);
+  image(meltPicture, 0, 0, W, H);
+  for (const patch of patches) patch.show();
+  if (frameCount % 3 === 0) meltPicture = get();
+  drawWords();
+}
+
+function beginNotifications() {
+  state = "notifications";
+  document.getElementById("challenge-stage").classList.add("is-art-ending");
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 4; col++) patches.push(new MeltPatch(col * 480 + 200, row * 340 + 100));
+  }
+  replayNotifications();
+  setStatus("Artwork messages are appearing. Click OK, or press Enter, to receive more.");
+}
+
+function replayNotifications() {
+  noticeFrame = frameCount;
+  noticeBeat = 0;
+  playEffect("notification", 0.35);
+}
+
+function drawNotifications() {
+  if (noticeBeat < NOTICE_BEATS.length && frameCount - noticeFrame >= NOTICE_BEATS[noticeBeat]) {
+    for (let i = 0; i < 3; i++)
+      addNotice(65 + noticeBeat * 260 + i * 22, 50 + noticeBeat * 140 + i * 24);
+    if (noticeBeat > 1) addNotice();
+    noticeBeat++;
+  }
+  for (let i = notices.length - 1; i >= 0; i--) {
+    if (notices[i].dismiss === 0) notices.splice(i, 1);
+  }
+  for (const notice of notices) notice.show();
+  if (returnAt > 0 && millis() >= returnAt) beginReturn();
+}
+
+function addNotice(x = random(30, W - 490), y = random(30, H - 270)) {
+  notices.push(new Notice(x, y, noticeNumber));
+  noticeNumber++;
+  if (notices.length > 16) notices.shift();
+}
+
+function clickNotice(x, y) {
+  for (let i = notices.length - 1; i >= 0; i--) {
+    if (notices[i].hit(x, y)) {
+      acceptNotice(notices[i]);
+      return;
+    }
+    if (notices[i].contains(x, y)) return;
+  }
+}
+
+function acceptLatestNotice() {
+  for (let i = notices.length - 1; i >= 0; i--) {
+    if (notices[i].dismiss === -1) {
+      acceptNotice(notices[i]);
+      return;
+    }
+  }
+}
+
+function acceptNotice(notice) {
+  if (notice.dismiss !== -1) return;
+  notice.dismiss = 12;
+  if (returnAt === 0) returnAt = millis() + 12000;
+  meltPicture = get();
+  patches.push(new MeltPatch(notice.x + 200, notice.y + 80));
+  if (patches.length > 24) patches.shift();
+  playEffect("ok", 0.35);
+  addNotice();
+  addNotice();
+  replayNotifications();
+}
+
+function beginReturn() {
+  state = "return";
+  returnEnd = millis() + 1900;
+  meltPicture = get();
+  stopSounds();
+  playEffect("transition", 0.4);
+  setStatus("Returning to ME-MARRT.");
+}
+
+function drawReturn() {
+  image(meltPicture, 0, 0, W, H);
+  for (let i = 0; i < 18; i++) {
+    const y = random(H - 40);
+    copy(meltPicture, 0, y, W, 20, random(-150, 150), y, W, random(20, 80));
+  }
+  fill(random(PALETTE));
+  noStroke();
+  rect(random(W), random(H), random(100, 600), random(5, 30));
+  if (millis() >= returnEnd) {
+    stopSounds();
+    location.href = "./";
+  }
+}
+
+function updateHud() {
+  document.getElementById("challenge-count").textContent = String(collected).padStart(2, "0");
+  document.getElementById("challenge-mode").textContent =
+    state === "intro" || state === "collect" ? "CATCH THE NEXT YOU." : "CLICK / LET IT MELT.";
+  const stage = document.getElementById("challenge-stage");
+  stage.dataset.mode = state;
+  stage.dataset.collected = collected;
+  stage.dataset.damageHits = meltClicks;
+  stage.dataset.notifications = notices.length;
+}
+
+function setStatus(message) {
+  document.getElementById("challenge-art-status").textContent = message;
+}
+
+class Product {
+  constructor(y) {
+    this.x = random(130, W - 130);
+    this.y = y;
+    this.kind = floor(random(PRODUCT_NAMES.length));
+    this.colour = random(PALETTE);
+    this.speed = random(5, 8);
+    this.angle = random(-0.25, 0.25);
+    this.caught = false;
+    this.size = random(140, 180);
+  }
+
+  update() {
+    if (this.caught) {
+      this.x += (this.targetX - this.x) * 0.15;
+      this.y += (this.targetY - this.y) * 0.15;
+      this.size += (110 - this.size) * 0.15;
+      this.angle *= 0.9;
+    } else {
+      this.y += this.speed;
+      this.angle += 0.004;
+    }
+  }
+
+  show() {
+    push();
+    translate(this.x, this.y);
+    rotate(this.angle);
+    scale(this.size / 180);
+    stroke("#111111");
+    strokeWeight(4);
+    fill(this.colour);
+    drawProduct(this.kind, this.colour);
+    pop();
+  }
+}
+
+function drawProduct(kind, colour) {
+  if (kind === 0) drawShirt();
+  if (kind === 1) drawBook();
+  if (kind === 2) drawBottle();
+  if (kind === 3) drawHeadphones(colour);
+  if (kind === 4) drawPlant();
+}
+
+function drawShirt() {
+  beginShape();
+  for (const point of SHIRT_POINTS) vertex(point[0], point[1]);
+  endShape(CLOSE);
+  line(-20, -60, 20, -60);
+  fill("#FFF6DF");
+  rect(-20, -15, 40, 30);
+}
+
+function drawBook() {
+  rect(-55, -70, 110, 140);
+  fill("#FFF6DF");
+  rect(-45, 50, 110, 20);
+  line(-38, -65, -38, 48);
+  line(-20, -25, 38, -25);
+  line(-20, -5, 25, -5);
+}
+
+function drawBottle() {
+  rect(-42, -45, 84, 110, 14);
+  fill("#FFF6DF");
+  rect(-25, -70, 50, 25);
+  rect(-35, -5, 70, 35);
+  line(-22, 10, 22, 10);
+}
+
+function drawHeadphones(colour) {
+  noFill();
+  strokeWeight(14);
+  arc(0, -5, 120, 125, PI, TWO_PI);
+  strokeWeight(4);
+  fill(colour);
+  rect(-75, -10, 35, 65, 8);
+  rect(40, -10, 35, 65, 8);
+}
+
+function drawPlant() {
+  line(0, 35, 0, -65);
+  ellipse(-25, -30, 65, 26);
+  ellipse(25, -60, 65, 26);
+  fill("#EE2724");
+  triangle(-50, 20, 50, 20, 0, 90);
+  rect(-55, 15, 110, 15);
+}
+
+class MeltPatch {
+  constructor(x, y) {
+    this.x = constrain(x, 100, W - 100);
+    this.y = constrain(y, 20, H - 30);
+    this.drop = 1;
+  }
+
+  show() {
+    for (let i = 0; i < 5; i++) {
+      const x = constrain(this.x + random(-150, 150), 0, W - 90);
+      const y = constrain(this.y + random(-90, 90), 0, H - 12);
+      const w = random(12, 90);
+      copy(meltPicture, x, y, w, 8, x + random(-12, 12), y + this.drop, w, 24 + this.drop);
+    }
+    this.drop = min(this.drop + 2.5, 320);
+  }
+}
+
+class Notice {
+  constructor(x, y, number) {
+    this.x = constrain(x, 15, W - 475);
+    this.y = constrain(y, 15, H - 250);
+    this.words = NOTICE_MESSAGES[number % NOTICE_MESSAGES.length];
+    this.dismiss = -1;
+  }
+
+  show() {
+    push();
+    translate(this.x, this.y);
+    if (this.dismiss > 0) translate(random(-18, 18), random(-5, 5));
+    this.drawPanel();
+    this.drawMessage();
+    this.drawButton();
+    pop();
+    if (this.dismiss > 0) this.dismiss--;
+  }
+
+  drawPanel() {
+    stroke("#FFFFFF");
+    strokeWeight(3);
+    fill("#CACACA");
+    rect(0, 0, 460, 235);
+    noStroke();
+    fill("#0714AD");
+    rect(5, 5, 450, 36);
+    fill("#FFFF00");
+    triangle(35, 65, 15, 105, 55, 105);
+  }
+
+  drawMessage() {
+    noStroke();
+    textAlign(LEFT, TOP);
+    textStyle(BOLD);
+    textSize(19);
+    fill("#FFFFFF");
+    text(this.words[0], 12, 13);
+    fill("#111111");
+    textSize(23);
+    text("!", 31, 78);
+    textStyle(NORMAL);
+    text(this.words[1], 75, 64, 365, 100);
+  }
+
+  drawButton() {
+    fill("#CACACA");
+    stroke("#111111");
+    strokeWeight(2);
+    rect(178, 180, 104, 37);
+    fill("#111111");
+    noStroke();
+    textSize(21);
+    textAlign(CENTER, CENTER);
+    text("OK", 230, 199);
+  }
+
+  hit(x, y) {
+    return (
+      this.dismiss === -1 &&
+      x > this.x + 178 &&
+      x < this.x + 282 &&
+      y > this.y + 180 &&
+      y < this.y + 217
+    );
+  }
+
+  contains(x, y) {
+    return x > this.x && x < this.x + 460 && y > this.y && y < this.y + 235;
+  }
+}

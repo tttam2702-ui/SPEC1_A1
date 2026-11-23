@@ -5,18 +5,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Challenge — ME-MARRT</title>
-    <script src="p5.js"></script>
-    <script src="challenge-model.js?v=academic-1"></script>
-    <script src="challenge-datamosh.js?v=academic-1"></script>
-    <script src="challenge-audio.js?v=academic-1"></script>
-    <script src="challenge-notifications.js?v=academic-1"></script>
-    <script src="challenge-return.js?v=academic-1"></script>
-    <link rel="stylesheet" href="style.css?v=academic-1" />
-    <link rel="stylesheet" href="site-shell.css?v=academic-1" />
-    <link rel="stylesheet" href="challenge.css?v=academic-1" />
-    <link rel="stylesheet" href="challenge-notifications.css?v=academic-1" />
-    <link rel="stylesheet" href="challenge-return.css?v=academic-1" />
-    <script src="site-shell.js?v=academic-1" defer></script>
+    <script src="p5.js?v=1.11.11"></script>
+    <script src="p5.sound.js?v=1.0.1"></script>
+    <script src="common.js?v=basics-3"></script>
+    <script src="site-shell.js?v=basics-3" defer></script>
+    <link rel="stylesheet" href="style.css?v=basics-3" />
+    <link rel="stylesheet" href="site-shell.css?v=basics-3" />
+    <link rel="stylesheet" href="challenge.css?v=basics-3" />
   </head>
   <body>
     <main class="challenge-stage" id="challenge-stage" data-site-stage>
@@ -28,54 +23,38 @@
         </div>
         <div class="challenge-score">
           <p>IN YOUR CART</p>
-          <output id="challenge-count" aria-live="polite">00</output
-          ><span id="challenge-time" aria-hidden="true">0.0s</span>
+          <output id="challenge-count" aria-live="polite">00</output>
         </div>
       </div>
-      <button
-        class="challenge-melt"
-        id="challenge-melt"
-        type="button"
-        aria-label="Glitch and melt another area of the image"
-        hidden
-      ></button>
-      <div class="challenge-targets" id="challenge-targets" aria-label="Falling objects"></div>
       <p class="challenge-art-status" id="challenge-art-status" role="status"></p>
-      <p class="challenge-offer" id="challenge-offer" hidden></p>
       <div class="challenge-controls">
-        <button id="challenge-pause" type="button" disabled>PAUSE</button>
+        <button id="challenge-pause" type="button" aria-pressed="false" disabled>PAUSE</button>
         <button id="challenge-restart" type="button" disabled>RESTART ↻</button>
       </div>
-      <dialog id="challenge-intro" class="challenge-intro" aria-labelledby="challenge-intro-title">
+      <section class="challenge-intro" id="challenge-intro" aria-labelledby="challenge-intro-title">
         <div class="challenge-intro-card">
-          <p class="challenge-intro-eyebrow">ME-MARRT / TODAY'S TASK</p>
-          <h2 id="challenge-intro-title" tabindex="-1" autofocus>FIX YOURSELF.</h2>
+          <p>ME-MARRT / TODAY'S TASK</p>
+          <h2 id="challenge-intro-title">FIX YOURSELF.</h2>
           <p class="challenge-intro-lead">Catch the things that promise a better you.</p>
           <ol>
-            <li>
-              <strong>CLICK</strong> the falling objects. They change colour and fly into your cart.
-            </li>
-            <li><strong>MOVE FAST.</strong> Every catch sends little labels bouncing out.</li>
-            <li>
-              <strong>WATCH IT MELT.</strong> After 5–6 catches, every click tears a new area of the
-              picture. Keep clicking around the screen.
-            </li>
-            <li>
-              <strong>CLICK OK.</strong> When the image breaks down, messages appear. Trying to fix
-              them creates more, until the store calls you back.
-            </li>
+            <li>Click the falling objects. They change colour and fly into your cart.</li>
+            <li>After six catches, click different areas to make the picture melt downward.</li>
+            <li>Click OK on the messages. Trying to fix them creates more.</li>
           </ol>
-          <p class="challenge-disclaimer">
-            An interactive artwork about shopping and self-improvement. Offers are fictional. PAUSE
-            and RESTART are available while collecting.
+          <p class="challenge-keyboard">
+            Keyboard: Enter catches an object, melts an area or accepts the latest message.
           </p>
-          <button class="challenge-start" id="challenge-start" type="button" disabled>
-            LOADING CART…
+          <p class="challenge-disclaimer">
+            An interactive artwork about shopping and self-improvement. All offers and messages are
+            fictional.
+          </p>
+          <button class="challenge-start" id="challenge-start" type="button">
+            LET'S GO SHOPPING →
           </button>
-          <a class="challenge-exit" href="offer.html">← Back to offers</a>
+          <a class="challenge-exit" href="./">← Back to ME-MARRT</a>
         </div>
-      </dialog>
+      </section>
     </main>
-    <script src="challenge.js?v=academic-1"></script>
+    <script src="challenge.js?v=basics-3"></script>
   </body>
 </html>

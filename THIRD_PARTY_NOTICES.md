@@ -1,18 +1,18 @@
 # Third-party code and references
 
-The project's application code is GPL-3.0-or-later. The following libraries and development tools keep their upstream licences and copyright notices.
+ME-MARRT application code is GPL-3.0-or-later. The libraries below keep their original copyright notices and licences. Their source is separate from the project's own scripts.
 
-| Component            | Local file / use                                                                                                   | Original source                                                                                                                                                                   | Licence copy                                                             |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| p5.js **2.3.4**      | `p5.js`; canvas drawing and input on all three pages                                                               | [Processing Foundation / p5.js v2.3.4](https://github.com/processing/p5.js/tree/v2.3.4), [upstream licence](https://github.com/processing/p5.js/blob/v2.3.4/license.txt)          | [LGPL 2.1](licenses/p5-LGPL-2.1.txt)                                     |
-| Matter.js **0.19.0** | `vendor/matter.min.js`; landing-page rigid-body physics. `vendor/matter.js` provides the readable upstream source. | [Liam Brummitt and contributors / Matter.js 0.19.0](https://github.com/liabru/matter-js/tree/0.19.0), [upstream licence](https://github.com/liabru/matter-js/blob/0.19.0/LICENSE) | [MIT](licenses/matter-MIT.txt), also retained in `vendor/matter-LICENSE` |
-| Acorn **8.15.0**     | Optional development-only JavaScript parser in `scripts/check-code.mjs`                                            | [Acorn contributors](https://github.com/acornjs/acorn/tree/8.15.0)                                                                                                                | [MIT](licenses/acorn-MIT.txt)                                            |
-| Prettier **3.6.2**   | Optional development-only formatter                                                                                | [Prettier contributors](https://github.com/prettier/prettier/tree/3.6.2)                                                                                                          | [MIT](licenses/prettier-MIT.txt)                                         |
+## Runtime libraries
 
-The runtime libraries are distributed without project-specific edits. Existing embedded notices in the readable p5.js distribution are retained, including notices for its bundled dependencies. Their code is not represented as original ME-MARRT application code. The source links identify the corresponding upstream versions. No external CDN is required to run the experiment.
+- **p5.js 1.11.11**, Processing Foundation and p5.js contributors. Local file: `p5.js`. Used for drawing, images and input. [Version source](https://github.com/processing/p5.js/tree/v1.11.11), [upstream licence](https://github.com/processing/p5.js/blob/v1.11.11/license.txt), [local LGPL 2.1 text](licenses/p5-LGPL-2.1.txt).
+- **p5.sound 1.0.1** (header dated 2021-05-25), the addon included with the p5.js 1.11.11 distribution. Local file: `p5.sound.js`. Used for loading, playing and stopping the supplied recordings. [Matching distribution](https://www.npmjs.com/package/p5/v/1.11.11), [upstream MIT licence](https://github.com/processing/p5.js-sound/blob/v1.0.1/LICENSE), [local MIT text](licenses/p5.sound-MIT.txt). Copyright © 2014–2015 The Processing Foundation. Its embedded version, copyright and dependency notices are retained.
 
-## Interaction inspiration
+The local libraries are included so the artwork does not need a CDN. Embedded notices for dependencies bundled inside those libraries remain in their files. Matter.js and the old custom Web Audio scheduler are not used in this version.
 
-The author supplied [Giang Nguyen's gravity-fall experiment](https://giangnguyenday.github.io/oart1033-a2-s4135042/) as a reference for the landing objects' gravity, bounce and dragging feel. The application uses Matter.js for those mechanics; the local scene, object arrangement, audio, messages, wheel and challenge logic are in the project scripts. The reference is credited as interaction inspiration, and is not bundled as a separately licensed library.
+## Interaction and visual references
 
-Other visual references were supplied in the project conversation for the outfit collage, message bubbles, tracking boxes, wheel typography and datamosh appearance. These references are not shipped as image assets in this repository.
+The student supplied [Giang Nguyen's gravity-fall experiment](https://giangnguyenday.github.io/oart1033-a2-s4135042/) as inspiration for bouncing and dragging objects. The current project implements movement with its own position, speed and boundary checks. The reference is not bundled as a library.
+
+The student also supplied visual references for the outfit collage, message bubbles, tracking boxes and melting/glitch imagery. Those reference screenshots are not included as assets in this repository.
+
+See [ASSET_CREDITS.md](ASSET_CREDITS.md) for the separate status of the supplied images and recordings. No unknown media licence is presented as verified.

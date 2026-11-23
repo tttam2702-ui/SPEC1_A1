@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // AI-assisted implementation, revised into named helpers for this project.
-// The shared shell keeps navigation, focus and fullscreen behaviour consistent.
+// Shared HTML credits and a few simple navigation functions.
 const SITE_NAVIGATION_HTML = `
     <nav class="site-nav" aria-label="Main navigation">
-      <a class="site-home" href="index.html">
+      <a class="site-home" href="./">
         <svg class="site-cart-icon" viewBox="0 0 26 24" aria-hidden="true" focusable="false">
           <path d="M1 2h4l3 13h13l3-10H6M8 9h14M10 5l1 10M15 5v10M20 5l-2 10M8 18h13" />
           <circle cx="10" cy="21" r="1.5" /><circle cx="20" cy="21" r="1.5" />
@@ -75,104 +75,67 @@ const SITE_ABOUT_HTML = `
       <time datetime="2026-11-19">19/11/2026</time>
     </div>`;
 
-function createShellElement(tag, className, html) {
-  const element = document.createElement(tag);
-  element.className = className;
-  element.innerHTML = html;
-  return element;
+// HTML navigation is kept here so the drawing sketches can stay focused on p5.
+let siteStage = document.querySelector("main");
+let siteHeader = document.createElement("header");
+siteHeader.className = "site-bar";
+siteHeader.innerHTML = SITE_NAVIGATION_HTML;
+document.body.prepend(siteHeader);
+let aboutPanel = document.createElement("section");
+aboutPanel.className = "about-panel";
+aboutPanel.id = "about-panel";
+aboutPanel.innerHTML = SITE_ABOUT_HTML;
+aboutPanel.setAttribute("aria-label", "About ME-MARRT");
+aboutPanel.setAttribute("aria-hidden", "true");
+aboutPanel.inert = true;
+siteStage.append(aboutPanel);
+let aboutButton = document.querySelector(".about-toggle");
+let closeButton = document.querySelector(".about-close");
+let fullscreenButton = document.querySelector(".fullscreen-toggle");
+
+function toggleAbout() {
+  aboutOpen = !aboutOpen;
+  siteStage.classList.toggle("is-about-open", aboutOpen);
+  aboutButton.setAttribute("aria-expanded", String(aboutOpen));
+  aboutPanel.setAttribute("aria-hidden", String(!aboutOpen));
+  aboutPanel.inert = !aboutOpen;
+  setSceneControls();
+  if (aboutOpen) closeButton.focus();
+  else aboutButton.focus();
+  stopSounds();
 }
 
-class SiteShell {
-  constructor(stage) {
-    this.stage = stage;
-    this.open = false;
-    this.previousInert = new Map();
-    this.header = createShellElement("header", "site-bar", SITE_NAVIGATION_HTML);
-    this.panel = createShellElement("section", "about-panel", SITE_ABOUT_HTML);
-    this.mount();
-    this.bindAbout();
-    this.bindFullscreen();
-  }
-
-  mount() {
-    document.body.prepend(this.header);
-    this.stage.append(this.panel);
-    this.panel.id = "about-panel";
-    this.panel.setAttribute("role", "region");
-    this.panel.setAttribute("aria-labelledby", "about-title");
-    this.panel.setAttribute("aria-hidden", "true");
-    this.panel.inert = true;
-    this.toggle = this.header.querySelector(".about-toggle");
-    this.close = this.panel.querySelector(".about-close");
-  }
-
-  bindAbout() {
-    this.toggle.addEventListener("click", () => this.setOpen(!this.open));
-    this.close.addEventListener("click", () => this.setOpen(false));
-    document.addEventListener("keydown", (event) => {
-      if (event.key !== "Escape" || !this.open) return;
-      event.preventDefault();
-      this.setOpen(false);
-    });
-  }
-
-  setOpen(next) {
-    if (next === this.open) return;
-    this.open = next;
-    this.toggle.setAttribute("aria-expanded", String(next));
-    this.panel.setAttribute("aria-hidden", String(!next));
-    this.panel.inert = !next;
-    this.stage.classList.toggle("is-about-open", next);
-    document.body.classList.toggle("about-open", next);
-    if (next) this.focusAbout();
-    else this.restoreScene();
-    document.dispatchEvent(new CustomEvent("site:aboutchange", { detail: { open: next } }));
-  }
-
-  // Inert prevents hidden moving buttons from stealing keyboard focus.
-  focusAbout() {
-    this.panel.scrollTop = 0;
-    for (const element of this.stage.children) {
-      if (element === this.panel) continue;
-      this.previousInert.set(element, element.inert);
-      element.inert = true;
-    }
-    this.close.focus({ preventScroll: true });
-  }
-
-  restoreScene() {
-    for (const [element, inert] of this.previousInert) element.inert = inert;
-    this.previousInert.clear();
-    this.toggle.focus({ preventScroll: true });
-  }
-
-  bindFullscreen() {
-    this.fullscreen = this.header.querySelector(".fullscreen-toggle");
-    this.fullscreen.hidden = !document.fullscreenEnabled;
-    this.fullscreen.addEventListener("click", () => this.toggleFullscreen());
-    document.addEventListener("fullscreenchange", () => this.updateFullscreenLabel());
-  }
-
-  async toggleFullscreen() {
-    try {
-      if (document.fullscreenElement) await document.exitFullscreen();
-      else await document.documentElement.requestFullscreen();
-    } catch (_) {
-      this.fullscreen.title = "Use your browser's fullscreen command if unavailable here.";
-    }
-    this.updateFullscreenLabel();
-  }
-
-  updateFullscreenLabel() {
-    const active = Boolean(document.fullscreenElement);
-    this.fullscreen.textContent = active ? "EXIT FULL SCREEN" : "FULL SCREEN";
-    this.fullscreen.setAttribute("aria-pressed", String(active));
+function setSceneControls() {
+  for (let i = 0; i < siteStage.children.length; i++) {
+    let element = siteStage.children[i];
+    if (element !== aboutPanel) element.inert = aboutOpen;
   }
 }
 
-function mountSiteShell() {
-  const stage = document.querySelector("[data-site-stage]");
-  if (stage && !document.querySelector(".site-bar")) new SiteShell(stage);
+// This small browser feature is separate from the course's drawing code.
+function toggleFullscreen() {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(fullscreenUnavailable);
 }
 
-mountSiteShell();
+function fullscreenUnavailable() {
+  fullscreenButton.title = "Use your browser's fullscreen command.";
+}
+
+function fullscreenLabel() {
+  let active = Boolean(document.fullscreenElement);
+  fullscreenButton.textContent = active ? "EXIT FULL SCREEN" : "FULL SCREEN";
+  fullscreenButton.setAttribute("aria-pressed", String(active));
+}
+
+function closeAboutWithEscape(event) {
+  if (event.key === "Escape" && aboutOpen) toggleAbout();
+}
+
+aboutButton.onclick = toggleAbout;
+closeButton.onclick = toggleAbout;
+fullscreenButton.onclick = toggleFullscreen;
+fullscreenButton.hidden = !document.fullscreenEnabled;
+document.addEventListener("fullscreenchange", fullscreenLabel);
+document.addEventListener("keydown", closeAboutWithEscape);
+document.querySelector(".site-home").onclick = stopSounds;
