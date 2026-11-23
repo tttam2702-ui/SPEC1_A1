@@ -53,8 +53,8 @@ class WarningSignal {
   }
 
   update() {
-    // Hold a hovered sign still so the visitor can click its visible shape.
-    if (this.hit(mouseX, mouseY)) return;
+    // Only the front sign pauses; signs behind it keep moving past the cursor.
+    if (this === hoveredSignal) return;
     if (frameCount % this.changeEvery === 0) this.scatter();
     this.x += (this.targetX - this.x) * 0.035;
     this.y += (this.targetY - this.y) * 0.035;
@@ -77,7 +77,7 @@ class WarningSignal {
 
   // A slow pulse suggests an active control even before the visitor hovers.
   drawClickRing() {
-    const hovered = this.hit(mouseX, mouseY);
+    const hovered = this === hoveredSignal;
     noFill();
     stroke(255, 255, 0, hovered ? 255 : 90 + 55 * sin(frameCount * 0.06 + this.number));
     strokeWeight(hovered ? 3 : 1);
@@ -85,7 +85,7 @@ class WarningSignal {
   }
 
   drawPanel() {
-    const selected = this.hit(mouseX, mouseY) || millis() < this.activeUntil;
+    const selected = this === hoveredSignal || millis() < this.activeUntil;
     stroke(selected ? "#FFFF00" : "#EE2724");
     strokeWeight(3);
     fill(selected ? "#FFFF00" : this.solid ? "#EE2724" : "#090203");
@@ -116,7 +116,7 @@ class WarningSignal {
   drawLabel() {
     noStroke();
     fill(
-      this.solid || this.hit(mouseX, mouseY) || millis() < this.activeUntil ? "#180003" : "#EE2724",
+      this.solid || this === hoveredSignal || millis() < this.activeUntil ? "#180003" : "#EE2724",
     );
     textAlign(CENTER, CENTER);
     textFont("Impact");

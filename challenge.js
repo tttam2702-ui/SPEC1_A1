@@ -16,6 +16,7 @@ let signalFrame = 0,
 let signalStartedAt = 0,
   signalGlitchUntil = 0;
 let signalBaseCount;
+let hoveredSignal = null;
 let returnAt = 0,
   returnEnd = 0;
 const SIGNAL_BEATS = [3, 27, 41, 54, 67];
@@ -256,10 +257,11 @@ function replaySignals() {
 function drawSignals() {
   drawSignalConnections();
   addSignalsOnBeat();
+  hoveredSignal = signalAt(mouseX, mouseY);
   for (const signal of signals) signal.show();
   drawSignalGlitch();
   drawSignalTickers();
-  cursor(signalAt(mouseX, mouseY) ? HAND : ARROW);
+  cursor(hoveredSignal ? HAND : ARROW);
   if (returnAt > 0 && millis() >= returnAt) beginReturn();
 }
 
