@@ -65,6 +65,8 @@ function setup() {
   textFont("Arial");
   frameRate(60);
   document.getElementById("challenge-start").onclick = startChallenge;
+  document.getElementById("challenge-start").disabled = false;
+  document.getElementById("challenge-start").textContent = "LET'S GO SHOPPING →";
   document.getElementById("challenge-pause").onclick = pauseChallenge;
   document.getElementById("challenge-restart").onclick = restartChallenge;
   document.getElementById("challenge-start").focus();
