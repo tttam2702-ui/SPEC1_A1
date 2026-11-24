@@ -9,7 +9,7 @@ This guide links the scene interactions to the topics in the supplied class sche
 3. **`draw()`** runs repeatedly. It updates positions, then draws the current picture.
 4. Mouse functions change the state when the visitor clicks or drags.
 
-All code is in **`sketch.js`**, with nine numbered section comments. Start with sections 1–4 and 6 for the basic scenes. Read the advanced `FrameArt` and `ChallengeDatamosh` classes in sections 5 and 7 afterwards. Section 8 contains the warnings and alert ribbons; section 9 draws the missing-person ending with p5 graphics, image slices and a small fragment class.
+All code is in **`sketch.js`**, with ten numbered section comments. Start with sections 1–4 and 6 for the basic scenes. Read the advanced `FrameArt` and `ChallengeDatamosh` classes in sections 5 and 7 afterwards. Section 8 contains the warnings and alert ribbons; section 9 draws the missing-person ending with p5 graphics, image slices and a small fragment class. Section 10 handles direct file opens before images and sounds are requested.
 
 `IS_CHALLENGE` checks whether the current HTML has the challenge stage. The single `preload()`, `setup()` and `draw()` callbacks use an `if` statement to call `preloadLanding()` / `preloadChallenge()`, `setupLanding()` / `setupChallenge()` and `drawLanding()` / `drawChallenge()`. The input callbacks use the same idea. Each page starts its own p5 sketch, so only that scene loads its images and sounds.
 

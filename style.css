@@ -93,3 +93,50 @@ canvas {
     0 0.275cqw 0 -1px #ff1a10,
     0 0.275cqw 0 0 #111111;
 }
+
+/* A direct file:// launch gets usable instructions instead of an endless preload. */
+.startup-recovery {
+  width: min(100vw, 900px);
+  aspect-ratio: auto;
+  max-height: 100dvh;
+  overflow: auto;
+}
+.startup-help {
+  box-sizing: border-box;
+  width: min(90%, 760px);
+  margin: 4% auto;
+  padding: clamp(20px, 3vw, 48px);
+  border: 2px solid #111;
+  background: #fff6df;
+  color: #111;
+  box-shadow: 8px 8px #ee2724;
+  font:
+    16px/1.5 Arial,
+    sans-serif;
+}
+.startup-help h1 {
+  margin: 16px 0;
+  color: #ee2724;
+  font:
+    900 clamp(36px, 5vw, 68px) / 0.95 Impact,
+    sans-serif;
+}
+.startup-help pre {
+  overflow-x: auto;
+  padding: 12px;
+  background: #ffff00;
+  font-size: 15px;
+}
+.startup-live-link {
+  display: inline-block;
+  padding: 12px 20px;
+  border: 2px solid #111;
+  background: #ffff00;
+  color: #ee2724;
+  font-weight: 900;
+  text-decoration: none;
+}
+.startup-live-link:focus-visible {
+  outline: 3px solid #087cff;
+  outline-offset: 4px;
+}

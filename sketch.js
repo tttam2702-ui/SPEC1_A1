@@ -14,6 +14,7 @@
 // 7. ChallengeDatamosh: the preserved pixel-feedback engine (advanced Canvas 2D).
 // 8. Warning signs, click cues and scrolling alerts.
 // 9. Identity erasure: a missing-person void and torn image fragments.
+// 10. Startup recovery for direct file:// launches.
 
 // 1. SHARED CANVAS AND SOUND
 
@@ -102,7 +103,7 @@ function stopSounds() {
 
 // Only a real input starts audio, so waiting on the landing page never queues pops.
 function enableSounds() {
-  if (soundReady) return;
+  if (OPENED_AS_FILE || soundReady || typeof userStartAudio !== "function") return;
   userStartAudio();
   soundReady = true;
 }
@@ -117,19 +118,27 @@ window.addEventListener("pagehide", stopSounds);
 
 // p5 calls these hooks on either HTML page. Only the matching scene runs.
 const IS_CHALLENGE = document.getElementById("challenge-stage") !== null;
+const OPENED_AS_FILE = window.location.protocol === "file:";
 
 function preload() {
+  if (OPENED_AS_FILE) return;
   if (IS_CHALLENGE) preloadChallenge();
   else preloadLanding();
 }
 
 function setup() {
+  if (OPENED_AS_FILE) {
+    noCanvas();
+    noLoop();
+    return;
+  }
   setupSiteShell();
   if (IS_CHALLENGE) setupChallenge();
   else setupLanding();
 }
 
 function draw() {
+  if (OPENED_AS_FILE) return;
   if (IS_CHALLENGE) drawChallenge();
   else drawLanding();
 }
@@ -149,6 +158,7 @@ function mouseReleased() {
 }
 
 function keyPressed(event) {
+  if (OPENED_AS_FILE) return;
   if (IS_CHALLENGE) return keyChallenge(event);
   return keyLanding();
 }
@@ -2770,3 +2780,29 @@ class IdentityShard {
     );
   }
 }
+
+// 10. STARTUP RECOVERY
+// File URLs cannot reliably fetch p5 images/sounds. Show help before entering preload.
+// Plain DOM is intentional here: recovery must also work if the p5 CDN is unavailable.
+function showLocalFileHelp() {
+  const page = IS_CHALLENGE ? "challenge.html" : "index.html";
+  const liveUrl = "https://tttam2702-ui.github.io/SPEC1_A1/" + page;
+  const main = document.querySelector("main");
+  main.classList.add("startup-recovery");
+  main.innerHTML = localFileHelpMarkup(liveUrl);
+}
+
+function localFileHelpMarkup(liveUrl) {
+  return `<section class="startup-help" aria-labelledby="startup-help-title">
+    <p>ME-MARRT / OPEN THE ARTWORK</p>
+    <h1 id="startup-help-title">LET’S OPEN<br>THE STORE.</h1>
+    <p>This HTML was opened directly from a folder. Images and sounds need a web server.</p>
+    <a class="startup-live-link" href="${liveUrl}">OPEN LIVE WEBSITE</a>
+    <p>To run this copy on your Mac, double-click <strong>START_ME_MARRT.command</strong>.
+      Keep its Terminal window open, then visit <strong>http://localhost:8000/</strong>.</p>
+    <p>Or open a terminal in this folder and run:</p>
+    <pre>python3 -m http.server 8000</pre>
+  </section>`;
+}
+
+if (OPENED_AS_FILE) showLocalFileHelp();

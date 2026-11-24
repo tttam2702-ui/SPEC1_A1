@@ -12,7 +12,9 @@ An interactive artwork about shopping, identity and **SDG 12: Responsible Consum
 
 ## Run the artwork
 
-Download the complete project. In a terminal, open this directory, beside `index.html`, and run:
+Download the complete project. On macOS, double-click **`START_ME_MARRT.command`**, keep the Terminal window open and visit **http://localhost:8000/**. Press Control+C in that window to stop the server.
+
+You can also open a terminal in this directory, beside `index.html`, and run:
 
 ```sh
 python3 -m http.server 8000
@@ -20,7 +22,7 @@ python3 -m http.server 8000
 
 Visit **http://localhost:8000/index.html**. Use a modern desktop browser. Any ordinary static web server also works. No build step or Node.js is needed to run the artwork. Images and sounds are included locally. An Internet connection is required for the version-pinned p5.js and p5.sound libraries loaded from jsDelivr; the project folder contains only one JavaScript file, `sketch.js`.
 
-Use the server instead of opening `index.html` with `file://`: the browser needs to load images and sounds. Sound begins after a visitor interacts with the page.
+Use the server instead of opening `index.html` or `challenge.html` with `file://`: the browser needs to load images and sounds. Direct file opens now show a help screen with a live-site link and server instructions instead of entering asset preload. Sound begins after a visitor interacts with the page.
 
 ## Display and interaction
 
@@ -51,6 +53,7 @@ The numbered comments in `sketch.js` mark these sections:
 | 7. Datamosh image feedback             | `ChallengeDatamosh`: the preserved melting engine.                 |
 | 8. Generative warning signs and alerts | Moving hexagons, click cues and scrolling ribbons.                 |
 | 9. Identity erasure                    | A human-shaped void, falling strips and bursts of image fragments. |
+| 10. Startup recovery                   | Direct file opens show instructions before media loading.          |
 
 `index.html` and `challenge.html` remain the browser entry points. The CSS files control page fitting and the HTML overlays. There are no other local `.js` files or inline JavaScript handlers.
 Start with [LEARNING_GUIDE.md](LEARNING_GUIDE.md). It separates the class-level interaction code from the two advanced visual sections and explains how they connect. [AI_ASSISTANCE.md](AI_ASSISTANCE.md) explains the AI assistance and revisions openly.
