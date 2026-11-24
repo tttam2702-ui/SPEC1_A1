@@ -6,7 +6,7 @@ All application JavaScript is in `sketch.js`, split into numbered reading sectio
 
 The landing uses handmade gravity/boundary rules, the changing outfit and the retained `FrameArt` image tracking. That tracking class includes native Canvas 2D pixel sampling beyond the supplied basic class topics.
 
-The challenge's generic RGB corruption was replaced with `ConsumptionMelt`. It makes catalogue prints from the actual collected products and stretches their existing colours with p5 graphics buffers. The retail palette, sale tags, display circle, barcode and **YOU → SOLD** ending tie the distortion to the project's consumption/identity statement. The product drawings are shared between the game and catalogue; no new visual asset was generated or downloaded.
+`ConsumptionMelt` makes catalogue prints from the actual collected products. The earlier `DatamoshFeedback` pixel algorithm was restored and connected to that print sheet, bringing back its neon colour transforms, block transport and diagonal melting trails. Its hidden surfaces are created with p5 graphics; the internal native pixel work remains an advanced extension. Unused error-window painting code was removed. The foreground retail palette, sale tags, display circle, barcode and **YOU → SOLD** ending tie the distortion to the project's consumption/identity statement. The product drawings are shared between the game and catalogue; no new visual asset was generated or downloaded.
 
 The product-person uses a p5 image mask and sliced image drawing. Repeated upgrades increase the distortion while label, ribbon and fragment counts remain bounded. The audio cue clock follows the supplied sound recording; no new audio engine was added.
 

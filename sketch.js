@@ -11,7 +11,7 @@
 // 4. Landing: falling products, outfit, head and passing cart.
 // 5. FrameArt: the preserved tracking/message artwork (advanced Canvas 2D).
 // 6. Challenge: collection, melting stages, sounds and return timer.
-// 7. ConsumptionMelt: catalogue artwork stretches and spreads through p5 graphics.
+// 7. ConsumptionMelt + DatamoshFeedback: purchased goods break into the original glitch texture.
 // 8. Sale labels, click cues and scrolling promotions.
 // 9. Product identity: the collected goods replace the shopper.
 // 10. Startup recovery for direct file:// launches.
@@ -1831,8 +1831,8 @@ function drawPlant(painter = window) {
 }
 
 // 7. CONSUMPTION MELT — PRINTED GOODS TAKE OVER THE SCREEN
-// AI-assisted, edited for ME-MARRT. All colours come from the store's existing palette.
-// Feedback stretches real catalogue artwork; no RGB inversion or unrelated glitch texture.
+// AI-assisted, edited for ME-MARRT. Store-colour source cards feed restored neon colour shifts.
+// Catalogue imagery feeds the original neon pixel feedback and diagonal melting ribbons.
 const PRINT_INKS = ["#087CFF", "#EE2724"];
 const PRINT_PAPERS = ["#FFF6DF", "#FDCFDE", "#FFFF00"];
 
@@ -1882,31 +1882,26 @@ class ConsumptionMelt {
     this.w = W / 2;
     this.h = H / 2;
     this.field = createGraphics(this.w, this.h);
-    this.memory = createGraphics(this.w, this.h);
     this.field.pixelDensity(1);
-    this.memory.pixelDensity(1);
     this.field.image(source, 0, 0, this.w, this.h);
     this.cards = items.map((item, i) => makeCatalogueCard(item, i));
     this.audioTrack = audioTrack;
-    this.resetState();
-  }
-
-  resetState() {
-    this.time = 0;
-    this.hits = 0;
-    this.complete = false;
-    this.cells = new Uint8Array(32 * 18);
-    this.ribbons = [];
+    this.time = this.hits = this.printIndex = 0;
     this.nextPrint = 0;
-    this.printIndex = 0;
-    this.beatCount = 0;
-    this.previousCue = -1;
-    this.beatPulse = 0;
-    this.accumulator = 0;
+    this.complete = false;
+    this.glitch = new DatamoshFeedback(source.canvas, { track: audioTrack });
   }
 
   get coverage() {
-    return this.cells.reduce((sum, cell) => sum + cell, 0) / this.cells.length;
+    return this.glitch.coverage;
+  }
+
+  get beatCount() {
+    return this.glitch.beatCount;
+  }
+
+  get ribbons() {
+    return this.glitch.ribbons;
   }
 
   addDamage(x, y) {
@@ -1916,80 +1911,21 @@ class ConsumptionMelt {
       const px = constrain(x / 2 + random(-65, 65), 70, this.w - 70);
       const py = constrain(y / 2 + random(-35, 35), 55, this.h - 55);
       this.stamp(px, py, random(145, 220));
-      this.addRibbon(px, py);
     }
+    this.glitch.addDamage(x, y, this.field.canvas);
   }
 
   stamp(x, y, width) {
     const card = this.cards[this.printIndex++ % this.cards.length];
-    const height = width * 0.75;
     const g = this.field;
     g.push();
     g.translate(x, y);
     g.rotate(random(-0.07, 0.07));
-    g.image(card, -width / 2, -height / 2, width, height);
+    g.image(card, -width / 2, -width * 0.375, width, width * 0.75);
     g.pop();
-    this.mark(x - width / 2, y - height / 2, width, height);
   }
 
-  mark(x, y, width, height) {
-    const left = max(0, floor(x / 30));
-    const right = min(31, floor((x + width) / 30));
-    const top = max(0, floor(y / 30));
-    const bottom = min(17, floor((y + height) / 30));
-    for (let row = top; row <= bottom; row++) {
-      for (let column = left; column <= right; column++) this.cells[row * 32 + column] = 1;
-    }
-  }
-
-  addRibbon(x, y) {
-    const px = constrain(x + random(-60, 60), 0, this.w - 40);
-    const py = constrain(y + random(-30, 30), 0, this.h - 30);
-    this.ribbons.push({ x: px, y: py, w: random(7, 28), h: random(5, 16), length: 0, age: 0 });
-    while (this.ribbons.length > 72) this.ribbons.shift();
-  }
-
-  updateBeat() {
-    const track = this.audioTrack;
-    const elapsed = track ? track.elapsed() : this.time;
-    const duration = track ? track.duration : 4.281;
-    const beats = track ? track.beats : MELT_BEATS;
-    const cycle = floor(elapsed / duration);
-    const cue = beats.filter((beat) => beat <= elapsed % duration).length + cycle * beats.length;
-    this.beatPulse *= 0.8;
-    if (cue <= this.previousCue) return;
-    this.beatCount += max(0, cue - max(0, this.previousCue));
-    this.previousCue = cue;
-    this.beatPulse = 1;
-    if (this.hits >= 3) this.addRibbon(random(50, this.w - 50), random(80, this.h - 80));
-  }
-
-  step(dt) {
-    this.memory.clear();
-    this.memory.image(this.field, 0, 0);
-    this.updateBeat();
-    this.meltRibbons(dt);
-    this.printMore();
-    if (this.hits >= 6 && this.coverage > 0.86 && this.time > 3) this.complete = true;
-  }
-
-  meltRibbons(dt) {
-    for (let i = this.ribbons.length - 1; i >= 0; i--) {
-      const ribbon = this.ribbons[i];
-      ribbon.age += dt;
-      ribbon.length += dt * (26 + this.beatPulse * 120);
-      this.stretchRibbon(ribbon);
-      if (ribbon.age > 2.8) this.ribbons.splice(i, 1);
-    }
-  }
-
-  stretchRibbon(ribbon) {
-    const { x, y, w, h, length } = ribbon;
-    this.field.image(this.memory, x, y, w, h + length, x, y, w, h);
-    this.mark(x, y, w, h + length);
-  }
-
-  // The ads spread in a loose print grid. Each extra purchase starts another print run.
+  // The source is the new catalogue; the transport and sheared melting come from the old effect.
   printMore() {
     if (this.hits < 3 || this.time < this.nextPrint) return;
     this.nextPrint = this.time + 0.28;
@@ -2001,24 +1937,471 @@ class ConsumptionMelt {
 
   absorb(fragment, x, y, width, height) {
     this.field.image(fragment, x, y, width, height);
-    this.mark(x, y, width, height);
-    for (let i = 0; i < 6; i++) this.addRibbon(x + random(width), y + random(height));
+    const effect = this.glitch;
+    effect.fieldCtx.drawImage(fragment.canvas, x, y, width, height);
+    effect.textureCtx.drawImage(effect.field, 0, 0);
+    effect.addRegion(
+      { x: x + width / 2, y: y + height / 2, radius: width * 0.4, born: effect.time },
+      70,
+    );
   }
 
   draw(dt) {
     this.time += dt;
-    this.accumulator += dt;
-    if (this.accumulator >= 1 / 30) {
-      this.step(this.accumulator);
-      this.accumulator = 0;
-    }
-    image(this.field, 0, 0, W, H);
+    this.printMore();
+    this.glitch.draw(drawingContext, dt, this.field.canvas);
+    this.complete = this.hits >= 6 && this.glitch.complete;
   }
 
   dispose() {
     this.field.remove();
-    this.memory.remove();
     for (const card of this.cards) card.remove();
+    this.glitch.dispose();
+  }
+}
+
+// Original channel transforms, block transport and diagonal ribbons, now fed by purchased goods.
+// AI-assisted project code, restored from this project's earlier version and adapted to p5 buffers.
+const DATAMOSH_CHANNEL_ORDERS = [
+  [0, 1, 2],
+  [1, 2, 0],
+  [2, 0, 1],
+  [1, 0, 2],
+  [0, 2, 1],
+  [2, 1, 0],
+];
+const DATAMOSH_INVERTED_CHANNELS = [-1, -1, -1, 0, 1, 2];
+
+class DatamoshFeedback {
+  constructor(source, { track = null } = {}) {
+    this.initializeDimensions(source);
+    this.initializeMeltState();
+    this.initializeBeatState(track);
+    this.buffers = [];
+    this.createSurfaces();
+    this.pixelScratch = new Float64Array(3);
+    this.sourcePixel = new Float64Array(3);
+    this.cleanCtx.drawImage(source, 0, 0, this.w, this.h);
+    this.prepareTexture();
+  }
+
+  initializeDimensions(source) {
+    this.width = source.width;
+    this.height = source.height;
+    this.w = 960;
+    this.h = 540;
+  }
+
+  initializeMeltState() {
+    this.time = 0;
+    this.hits = 0;
+    this.complete = false;
+    this.floodAt = null;
+    this.seed = Math.random() * 10000;
+    this.cells = new Uint8Array(32 * 18);
+    this.regions = [];
+    this.ribbons = [];
+    this.accumulator = 0;
+    this.nextFlow = 0;
+  }
+
+  initializeBeatState(track) {
+    this.audioTrack = track;
+    this.audioCycle = 0;
+    this.audioCue = 0;
+    this.beatPulse = 0;
+    this.lastAudioBeatAt = -Infinity;
+    this.beatCount = 0;
+    this.beatLog = [];
+  }
+
+  createSurfaces() {
+    this.clean = this.surface();
+    this.texture = this.surface();
+    this.field = this.surface();
+    this.history = this.surface();
+    this.cleanCtx = this.clean.getContext("2d");
+    this.textureCtx = this.texture.getContext("2d", { willReadFrequently: true });
+    this.fieldCtx = this.field.getContext("2d");
+    this.historyCtx = this.history.getContext("2d");
+  }
+
+  // p5 owns every buffer; native pixel operations preserve the original datamosh appearance.
+  surface() {
+    const graphics = createGraphics(this.w, this.h);
+    graphics.pixelDensity(1);
+    this.buffers.push(graphics);
+    return graphics.canvas;
+  }
+
+  hash(n) {
+    const value = Math.sin(n * 127.1 + this.seed) * 43758.5453;
+    return value - Math.floor(value);
+  }
+
+  random(min, max) {
+    return min + Math.random() * (max - min);
+  }
+
+  get coverage() {
+    return this.cells.reduce((sum, value) => sum + value, 0) / this.cells.length;
+  }
+
+  prepareTexture(source) {
+    if (source) this.cleanCtx.drawImage(source, 0, 0, this.w, this.h);
+    const ctx = this.textureCtx;
+    ctx.drawImage(this.clean, 0, 0);
+    ctx.globalAlpha = 0.65;
+    ctx.drawImage(this.field, 0, 0);
+    ctx.globalAlpha = 1;
+    const image = ctx.getImageData(0, 0, this.w, this.h);
+    this.colourTexture(image.data);
+    ctx.putImageData(image, 0, 0);
+  }
+
+  channelTurns() {
+    const columns = Math.ceil(this.w / 18);
+    const turns = [];
+    for (let i = 0; i < columns * Math.ceil(this.h / 12); i++) {
+      turns[i] = Math.floor(this.hash(i + this.hits * 13) * 6);
+    }
+    return { columns, turns };
+  }
+
+  colourTexture(data) {
+    const { columns, turns } = this.channelTurns();
+    for (let y = 0; y < this.h; y++) {
+      for (let x = 0; x < this.w; x++) {
+        const index = (y * this.w + x) * 4;
+        const turn = turns[Math.floor(y / 12) * columns + Math.floor(x / 18)];
+        this.colourPixel(data, index, turn);
+      }
+    }
+  }
+
+  colourPixel(data, index, turn) {
+    const rgb = this.pixelScratch;
+    for (let channel = 0; channel < 3; channel++) rgb[channel] = data[index + channel];
+    this.transformPixel(rgb, turn);
+    for (let channel = 0; channel < 3; channel++) {
+      data[index + channel] = Math.round(rgb[channel] / 32) * 32;
+    }
+  }
+
+  transformPixel(rgb, turn) {
+    const brightGray = Math.max(...rgb) - Math.min(...rgb) < 24 && rgb[0] > 170;
+    if (brightGray) this.brightenPixel(rgb);
+    else {
+      this.saturatePixel(rgb);
+      this.shiftChannels(rgb, turn);
+    }
+  }
+
+  brightenPixel(rgb) {
+    for (let channel = 0; channel < 3; channel++) {
+      rgb[channel] = Math.min(255, rgb[channel] * 1.1);
+    }
+  }
+
+  saturatePixel(rgb) {
+    for (let channel = 0; channel < 3; channel++) {
+      rgb[channel] = Math.max(0, Math.min(255, (rgb[channel] - 100) * 1.8 + 80));
+    }
+  }
+
+  shiftChannels(rgb, turn) {
+    for (let channel = 0; channel < 3; channel++) this.sourcePixel[channel] = rgb[channel];
+    const order = DATAMOSH_CHANNEL_ORDERS[turn];
+    for (let channel = 0; channel < 3; channel++) rgb[channel] = this.sourcePixel[order[channel]];
+    const inverted = DATAMOSH_INVERTED_CHANNELS[turn];
+    if (inverted >= 0) rgb[inverted] = 255 - rgb[inverted];
+  }
+
+  mark(x, y, w, h) {
+    const left = Math.max(0, Math.floor(x / 30));
+    const right = Math.min(31, Math.floor((x + w) / 30));
+    const top = Math.max(0, Math.floor(y / 30));
+    const bottom = Math.min(17, Math.floor((y + h) / 30));
+    for (let row = top; row <= bottom; row++) {
+      for (let col = left; col <= right; col++) this.cells[row * 32 + col] = 1;
+    }
+  }
+
+  addDamage(x, y, source) {
+    if (this.complete) return;
+    this.hits++;
+    this.prepareTexture(source);
+    this.makeRegion(
+      (x / this.width) * this.w,
+      (y / this.height) * this.h,
+      Math.min(157, 74 + this.hits * 7),
+    );
+  }
+
+  makeRegion(x, y, radius) {
+    x = Math.max(0, Math.min(this.w, x));
+    y = Math.max(0, Math.min(this.h, y));
+    for (let dy = -radius; dy < radius; dy += 9) {
+      for (let dx = -radius; dx < radius; dx += 12) {
+        if (!this.insideRegion(dx, dy, radius)) continue;
+        this.paintRegionFragment(this.fieldCtx, x + dx, y + dy);
+      }
+    }
+    this.addRegion({ x, y, radius, born: this.time }, 58);
+  }
+
+  insideRegion(dx, dy, radius) {
+    return (
+      (dx * dx) / (radius * radius) + (dy * dy) / (radius * radius) <= 0.8 + Math.random() * 0.3
+    );
+  }
+
+  paintRegionFragment(ctx, px, py) {
+    const w = this.random(10, 27);
+    const h = this.random(7, 19);
+    const { sx, sy } = this.fragmentSource(px, py);
+    this.drawTextureFragment(ctx, sx, sy, px, py, w, h);
+    this.fragmentFringe(ctx, px, py, w);
+    this.mark(px, py, w, h);
+  }
+
+  fragmentSource(px, py) {
+    const local = Math.random() > 0.22;
+    const sx = local
+      ? Math.max(0, Math.min(this.w - 45, px + this.random(-25, 25)))
+      : this.random(250, 650);
+    const sy = local
+      ? Math.max(0, Math.min(this.h - 35, py + this.random(-20, 20)))
+      : this.random(40, 490);
+    return { sx, sy };
+  }
+
+  drawTextureFragment(ctx, sx, sy, px, py, w, h) {
+    ctx.drawImage(this.texture, sx, sy, this.random(6, 40), this.random(3, 25), px, py, w, h);
+  }
+
+  fragmentFringe(ctx, x, y, w) {
+    if (Math.random() <= 0.7) return;
+    ctx.fillStyle = Math.random() > 0.5 ? "#00E000" : "#FF2396";
+    ctx.fillRect(x, y, w, 1);
+  }
+
+  addRegion(region, ribbonCount) {
+    this.regions.push(region);
+    this.regions = this.regions.slice(-24);
+    for (let i = 0; i < ribbonCount; i++) this.addRibbon(region);
+    this.historyCtx.drawImage(this.field, 0, 0);
+  }
+
+  addRibbon(region) {
+    const x = region.x + this.random(-region.radius, region.radius);
+    const y = region.y + this.random(-region.radius * 0.7, region.radius * 0.7);
+    this.ribbons.push(this.makeRibbon(x, y));
+    this.ribbons = this.ribbons.slice(-650);
+  }
+
+  makeRibbon(x, y) {
+    return {
+      x,
+      y,
+      width: this.random(2, 14),
+      length: this.random(3, 22),
+      speed: this.random(34, 112),
+      shear: this.random(-0.18, 0.95),
+      sx: Math.max(0, Math.min(this.w - 24, x + this.random(-35, 35))),
+      sy: Math.max(0, Math.min(this.h - 28, y + this.random(-28, 28))),
+      sampleHeight: this.random(2, 18),
+      born: this.time,
+      fringe: Math.random() > 0.5 ? "#00EDFF" : "#FF009E",
+    };
+  }
+
+  updateAudioBeat(dt) {
+    this.beatPulse = Math.max(0, this.beatPulse - dt * 8);
+    const track = this.audioTrack;
+    const elapsed = track?.elapsed();
+    if (!track || !Number.isFinite(elapsed) || elapsed < 0 || !track.beats.length) return;
+    if (!track.loop && this.audioCue >= track.beats.length) return;
+    const duration = track.duration;
+    if (!Number.isFinite(duration) || duration <= 0) return;
+    this.skipStaleCycles(track, elapsed, duration);
+    this.consumeAudioCues(track, elapsed, duration);
+    this.beatPulse = Math.max(0, 1 - (elapsed - this.lastAudioBeatAt) * 8);
+  }
+
+  skipStaleCycles(track, elapsed, duration) {
+    if (!track.loop || elapsed - this.audioCycle * duration <= duration * 2) return;
+    this.audioCycle = Math.floor(elapsed / duration);
+    this.audioCue = 0;
+  }
+
+  consumeAudioCues(track, elapsed, duration) {
+    for (let count = 0; count < 32; count++) {
+      const expected = this.audioCycle * duration + track.beats[this.audioCue];
+      if (elapsed < expected) break;
+      this.recordAudioCue(expected, elapsed);
+      this.audioCue++;
+      if (this.audioCue === track.beats.length) {
+        if (!track.loop) break;
+        this.audioCue = 0;
+        this.audioCycle++;
+      }
+    }
+  }
+
+  recordAudioCue(expected, elapsed) {
+    this.lastAudioBeatAt = expected;
+    this.beatCount++;
+    this.beatLog.push({ beat: Number(expected.toFixed(3)), at: Number(elapsed.toFixed(3)) });
+    this.beatLog = this.beatLog.slice(-16);
+    for (let i = 0; i < 8 && this.regions.length; i++) this.addRibbon(this.randomRegion());
+  }
+
+  randomRegion() {
+    return this.regions[Math.floor(Math.random() * this.regions.length)];
+  }
+
+  feedback(dt) {
+    const ctx = this.fieldCtx;
+    ctx.drawImage(this.history, 0, 0);
+    const pulse = this.audioTrack ? this.beatPulse : 1;
+    this.transportFragments(ctx, pulse);
+    this.stretchRibbons(ctx, dt);
+    this.removeInactiveRibbons();
+    this.addAmbientFlow();
+    this.historyCtx.drawImage(this.field, 0, 0);
+    this.updateFlood();
+  }
+
+  transportFragments(ctx, pulse) {
+    for (let i = 0; i < 1 + Math.round(8 * pulse) && this.regions.length; i++) {
+      this.transportFragment(ctx, this.randomRegion(), pulse);
+    }
+  }
+
+  transportFragment(ctx, region, pulse) {
+    const bounds = this.transportBounds(region);
+    this.drawTransport(ctx, bounds, pulse);
+  }
+
+  transportBounds(region) {
+    const sx = Math.max(
+      0,
+      Math.min(this.w - 60, region.x + this.random(-region.radius, region.radius)),
+    );
+    const sy = Math.max(
+      0,
+      Math.min(this.h - 16, region.y + this.random(-region.radius, region.radius + 160)),
+    );
+    const w = Math.min(this.w - sx, this.random(20, 150));
+    const h = this.random(2, 12);
+    return { sx, sy, w, h };
+  }
+
+  drawTransport(ctx, { sx, sy, w, h }, pulse) {
+    ctx.drawImage(
+      this.history,
+      sx,
+      sy,
+      w,
+      h,
+      sx + this.random(-8, 13) * pulse,
+      sy + this.random(3, 13) * (0.2 + pulse),
+      w,
+      h,
+    );
+  }
+
+  stretchRibbons(ctx, dt) {
+    for (const ribbon of this.ribbons) {
+      this.advanceRibbon(ribbon, dt);
+      this.drawRibbon(ctx, ribbon);
+    }
+  }
+
+  advanceRibbon(ribbon, dt) {
+    const previous = ribbon.length;
+    const flow = this.audioTrack ? 0.2 + this.beatPulse * 3 : 1;
+    ribbon.length = Math.min(this.h + 180, ribbon.length + ribbon.speed * dt * flow);
+    const endX = ribbon.x + ribbon.shear * ribbon.length;
+    this.mark(endX, ribbon.y + previous, ribbon.width, Math.max(4, ribbon.length - previous));
+  }
+
+  drawRibbon(ctx, ribbon) {
+    ctx.save();
+    ctx.translate(Math.round(ribbon.x), Math.round(ribbon.y));
+    ctx.transform(1, 0, ribbon.shear, 1, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    this.paintRibbonTexture(ctx, ribbon);
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = ribbon.fringe;
+    ctx.fillRect(0, 0, 1, ribbon.length);
+    ctx.restore();
+  }
+
+  paintRibbonTexture(ctx, ribbon) {
+    ctx.drawImage(
+      this.texture,
+      ribbon.sx,
+      ribbon.sy,
+      ribbon.width,
+      ribbon.sampleHeight,
+      0,
+      0,
+      ribbon.width,
+      ribbon.length,
+    );
+  }
+
+  removeInactiveRibbons() {
+    this.ribbons = this.ribbons.filter(
+      (ribbon) => ribbon.y + ribbon.length < this.h + 180 && this.time - ribbon.born < 13,
+    );
+  }
+
+  addAmbientFlow() {
+    if (this.audioTrack || this.time < this.nextFlow || !this.regions.length) return;
+    this.nextFlow = this.time + 0.13;
+    for (let i = 0; i < 3; i++) this.addRibbon(this.randomRegion());
+  }
+
+  // Fill the final gaps only after several clicked patches have already merged.
+  updateFlood() {
+    if (this.floodAt === null && this.hits >= 5 && this.coverage >= 0.74) this.floodAt = this.time;
+    if (this.floodAt === null || this.complete) return;
+    this.spillIntoGaps();
+    if (this.coverage > 0.98 && this.time - this.floodAt > 1.1) this.complete = true;
+  }
+
+  spillIntoGaps() {
+    const gaps = [];
+    this.cells.forEach((value, index) => {
+      if (!value) gaps.push(index);
+    });
+    for (let i = 0; i < 4 && gaps.length; i++) {
+      const index = gaps.splice(Math.floor(Math.random() * gaps.length), 1)[0];
+      this.makeRegion((index % 32) * 30 + 15, Math.floor(index / 32) * 30 + 15, 44);
+    }
+  }
+
+  draw(ctx, dt, source) {
+    this.time += dt;
+    this.accumulator += dt;
+    this.updateAudioBeat(dt);
+    if (source) this.cleanCtx.drawImage(source, 0, 0, this.w, this.h);
+    if (this.accumulator >= 1 / 30) {
+      this.feedback(this.accumulator);
+      this.accumulator = 0;
+    }
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(this.clean, 0, 0, this.width, this.height);
+    ctx.drawImage(this.field, 0, 0, this.width, this.height);
+    ctx.restore();
+  }
+
+  dispose() {
+    for (const graphics of this.buffers) graphics.remove();
   }
 }
 

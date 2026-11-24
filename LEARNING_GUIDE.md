@@ -9,7 +9,7 @@ This guide links the scene interactions to the topics in the supplied class sche
 3. **`draw()`** runs repeatedly. It updates positions, then draws the current picture.
 4. Mouse functions change the state when the visitor clicks or drags.
 
-All code is in **`sketch.js`**, with ten numbered section comments. Start with sections 1–4 and 6 for the basic scenes. Read the retained `FrameArt` tracking class in section 5 and the p5 `ConsumptionMelt` image-feedback class in section 7 afterwards. Section 8 contains the sale labels and promotion ribbons; section 9 draws the product-person ending with p5 graphics, image slices and a small fragment class. Section 10 handles direct file opens before images and sounds are requested.
+All code is in **`sketch.js`**, with ten numbered section comments. Start with sections 1–4 and 6 for the basic scenes. Read the advanced `FrameArt` tracking class in section 5 and the restored `DatamoshFeedback` class in section 7 afterwards. `ConsumptionMelt` connects that feedback to the collected goods. Section 8 contains the sale labels and promotion ribbons; section 9 draws the product-person ending with p5 graphics, image slices and a small fragment class. Section 10 handles direct file opens before images and sounds are requested.
 
 `IS_CHALLENGE` checks whether the current HTML has the challenge stage. The single `preload()`, `setup()` and `draw()` callbacks use an `if` statement to call `preloadLanding()` / `preloadChallenge()`, `setupLanding()` / `setupChallenge()` and `drawLanding()` / `drawChallenge()`. The input callbacks use the same idea. Each page starts its own p5 sketch, so only that scene loads its images and sounds.
 
@@ -51,7 +51,7 @@ The p5.sound addon handles audio playback. `MeltBeatClock` reads its playhead so
 
 **Messages and tracking:** `FrameArt` draws message sprites and samples the existing product images for coloured tracking patches. The points jitter and connect with lines. This advanced visual effect is decorative; it does not use a camera or machine-learning tracker.
 
-**Consumption melt:** each catch adds its kind to `collectedItems`. `makeCatalogueCard()` draws that same product on a p5 graphics buffer. `ConsumptionMelt` stamps these cards near a click and later spreads them across a loose grid. A second graphics buffer stores the previous frame; image crops stretch its ink downward without changing the RGB channels. `mark()` records occupied grid cells so the ending begins once purchases have filled enough of the image.
+**Consumption melt:** each catch adds its kind to `collectedItems`. `makeCatalogueCard()` draws that same product on a p5 graphics buffer. `ConsumptionMelt` stamps these cards near a click and later spreads them across a loose grid. `DatamoshFeedback` stores the preceding image, shifts its colour channels, breaks it into small blocks and pulls thin patches into long diagonal ribbons. Its surfaces are created with p5 `createGraphics()`; the advanced pixel work uses their native contexts. Grid cells track how far the corrupt image has spread. The ending starts after at least six clicks and nearly full coverage.
 
 **Sale labels:** `SaleLabel` stores position, size, angle and offer text. `scatter()` chooses random targets. `hit()` rotates the mouse position back into the price tag. The front label pauses on hover; clicking it prints more and starts the return timer only once. `drawAlertTicker()` uses text width, a loop and remainder (`%`) to repeat the promotions continuously.
 
@@ -85,15 +85,15 @@ The p5.sound addon handles audio playback. `MeltBeatClock` reads its playhead so
 
 These are additional techniques used to keep the detailed visual effects. They should be described as extensions, rather than claiming every line comes from the class topics.
 
-| Class and method                                                             | What it adds                                                                                                    |
-| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `FrameArt.heatmapFor()` and `FrameArt.colorizeHeatmap()` in section 5        | Reads image pixels and maps brightness to bright colours. A cache avoids repeating that pixel work every frame. |
-| `FrameArt.trackImage()` and `FrameArt.drawTrackingLinks()`                   | Samples patches from the products, draws jittering tracking boxes and joins points into a web.                  |
-| `FrameArt.drawMessages()` and `FrameArt.glitchMessage()`                     | Draws cached bubble images and splits them into offset strips when dismissed.                                   |
-| `ConsumptionMelt.stamp()` and `ConsumptionMelt.stretchRibbon()` in section 7 | Draws selected goods as print textures, then stretches their own pixels downward.                               |
-| `ConsumptionMelt.addDamage()` and `ConsumptionMelt.draw()`                   | Adds a local print cluster, updates coverage and displays the spreading catalogue.                              |
+| Class and method                                                           | What it adds                                                                                                    |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `FrameArt.heatmapFor()` and `FrameArt.colorizeHeatmap()` in section 5      | Reads image pixels and maps brightness to bright colours. A cache avoids repeating that pixel work every frame. |
+| `FrameArt.trackImage()` and `FrameArt.drawTrackingLinks()`                 | Samples patches from the products, draws jittering tracking boxes and joins points into a web.                  |
+| `FrameArt.drawMessages()` and `FrameArt.glitchMessage()`                   | Draws cached bubble images and splits them into offset strips when dismissed.                                   |
+| `ConsumptionMelt.stamp()` and `DatamoshFeedback.drawRibbon()` in section 7 | Draws the selected goods as source prints, then applies the original sheared pixel-ribbon melt.                 |
+| `ConsumptionMelt.addDamage()` and `ConsumptionMelt.draw()`                 | Adds a local print cluster, updates coverage and displays the spreading catalogue.                              |
 
-The preserved landing tracking uses native Canvas 2D, image caches, pixel data and clipping. The redesigned consumption melt uses p5 `createGraphics()` and `image()`; the product-person also uses p5 image masks. These image techniques extend the basic drawing examples without adding another runtime library.
+The preserved landing tracking and restored background feedback use native Canvas 2D image processing, beyond the introductory drawing examples. All feedback buffers are created through p5. The catalogue and product-person use p5 graphics and image masks. There is still only one project JavaScript file and no additional runtime library.
 
 ## Explain one interaction
 

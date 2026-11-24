@@ -36,35 +36,35 @@ The offers are fictional. No purchase takes place. The ending contains moving gl
 
 ## Read the code
 
-The product movement, outfit changes, collection and sale labels use p5 drawing, conditions, loops, arrays and classes. `ConsumptionMelt` uses p5 graphics buffers and image crops to stretch the printed artwork. The landing's preserved `FrameArt` tracking class still uses native Canvas 2D pixel processing beyond the supplied class topics. The project has two pages and uses no physics library.
+The product movement, outfit changes, collection and sale labels use p5 drawing, conditions, loops, arrays and classes. `ConsumptionMelt` creates the purchased-product print sheet in p5 graphics. `DatamoshFeedback` restores the original neon channel shifts, small pixel blocks and sheared melting ribbons over that sheet. This feedback class and the landing's `FrameArt` tracking use native Canvas 2D pixel processing beyond the supplied basic class topics, on buffers created through p5. The project has two pages and uses no physics library.
 
 All application code is in **`sketch.js`**. The two HTML pages load the same file. One set of p5 hooks (`preload`, `setup`, `draw` and input callbacks) checks `IS_CHALLENGE` and runs the appropriate scene. Shared navigation and About are created with p5 DOM helpers during `setup()`.
 
 The numbered comments in `sketch.js` mark these sections:
 
-| Section                                 | Purpose                                                                        |
-| --------------------------------------- | ------------------------------------------------------------------------------ |
-| 1. Shared canvas and sound              | Screen size, palette, backgrounds and sound functions.                         |
-| 2. p5 lifecycle and input               | Routes the p5 callbacks to landing or challenge.                               |
-| 3. Shared navigation and About          | Navigation, fullscreen and project credits.                                    |
-| 4. Landing scene                        | Falling images, dragging, outfit, head and passing cart.                       |
-| 5. Tracking and message artwork         | `FrameArt`: image tracking, bubbles and connecting lines.                      |
-| 6. Challenge scene                      | Catching items, challenge stages and the return timer.                         |
-| 7. Consumption melt                     | `ConsumptionMelt`: collected goods become spreading, melting catalogue prints. |
-| 8. Sale labels and scrolling promotions | Moving price tags, click cues and retail promotion ribbons.                    |
-| 9. Product identity                     | A shopper made from collected goods dissolves into a barcode.                  |
-| 10. Startup recovery                    | Direct file opens show instructions before media loading.                      |
+| Section                                 | Purpose                                                                               |
+| --------------------------------------- | ------------------------------------------------------------------------------------- |
+| 1. Shared canvas and sound              | Screen size, palette, backgrounds and sound functions.                                |
+| 2. p5 lifecycle and input               | Routes the p5 callbacks to landing or challenge.                                      |
+| 3. Shared navigation and About          | Navigation, fullscreen and project credits.                                           |
+| 4. Landing scene                        | Falling images, dragging, outfit, head and passing cart.                              |
+| 5. Tracking and message artwork         | `FrameArt`: image tracking, bubbles and connecting lines.                             |
+| 6. Challenge scene                      | Catching items, challenge stages and the return timer.                                |
+| 7. Consumption melt                     | `ConsumptionMelt` feeds collected goods into the restored `DatamoshFeedback` texture. |
+| 8. Sale labels and scrolling promotions | Moving price tags, click cues and retail promotion ribbons.                           |
+| 9. Product identity                     | A shopper made from collected goods dissolves into a barcode.                         |
+| 10. Startup recovery                    | Direct file opens show instructions before media loading.                             |
 
 `index.html` and `challenge.html` remain the browser entry points. The CSS files control page fitting and the HTML overlays. There are no other local `.js` files or inline JavaScript handlers.
 Start with [LEARNING_GUIDE.md](LEARNING_GUIDE.md). It separates the class-level interaction code from the image effects and explains how they connect. [AI_ASSISTANCE.md](AI_ASSISTANCE.md) explains the AI assistance and revisions openly.
 
 ## The consumption ending
 
-The distortion uses the objects actually caught during this round. Their drawings become red/blue catalogue prints on pink, cream and yellow stock. Clicking adds local print clusters and downward ink smears; continued buying makes the catalogue spread across the remaining space. The recording's cue times increase the ink flow. Colours stay within ME-MARRT's retail palette; there are no random RGB inversions.
+The distortion uses the objects actually caught during this round. Their drawings become red/blue catalogue prints on pink, cream and yellow stock. Clicking adds local print clusters and downward ink smears; continued buying makes the catalogue spread across the remaining space. The recording's cue times drive the flow. The original datamosh aesthetic is restored: neon colour-channel changes, dense pixel blocks and long diagonal melt trails. Its source is the actual catalogue and shopping scene, while the foreground sale labels and product-person keep the consumption story readable.
 
 The ending echoes the landing's yellow display circle. Inside it, a human silhouette is filled with the collected products. Each **CLICK TO UPGRADE** adds offers and makes the figure slip into barcode strips. After three upgrades, **YOU** becomes **SOLD**. The first upgrade starts the 12-second countdown, followed by a 1.9-second barcode return asking **BACK FOR MORE?** The loop connects the spectacle to the project statement: consumption gradually replaces the person.
 
-There are at most 32 interactive labels, 72 ink ribbons and 80 loose image fragments. The body uses p5 shapes and a mask; no extra illustration, downloaded visual asset or new runtime library was added.
+There are at most 32 interactive labels, 650 background melt ribbons and 80 loose image fragments. The body uses p5 shapes and a mask; no extra illustration, downloaded visual asset or new runtime library was added.
 
 ## Licences and credits
 
