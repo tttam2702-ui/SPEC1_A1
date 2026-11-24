@@ -11,9 +11,9 @@
 // 4. Landing: falling products, outfit, head and passing cart.
 // 5. FrameArt: the preserved tracking/message artwork (advanced Canvas 2D).
 // 6. Challenge: collection, melting stages, sounds and return timer.
-// 7. ChallengeDatamosh: the preserved pixel-feedback engine (advanced Canvas 2D).
-// 8. Warning signs, click cues and scrolling alerts.
-// 9. Identity erasure: a missing-person void and torn image fragments.
+// 7. ConsumptionMelt: catalogue artwork stretches and spreads through p5 graphics.
+// 8. Sale labels, click cues and scrolling promotions.
+// 9. Product identity: the collected goods replace the shopper.
 // 10. Startup recovery for direct file:// launches.
 
 // 1. SHARED CANVAS AND SOUND
@@ -1402,6 +1402,7 @@ class FrameArt {
 // The ending adds a generative field of multiplying identity signals to the melting image.
 let cartImage, meltPicture, meltSource;
 let datamosh = null;
+let collectedItems = [];
 let products = [],
   words = [],
   signals = [];
@@ -1419,7 +1420,7 @@ let hoveredSignal = null;
 let returnAt = 0,
   returnEnd = 0;
 const SIGNAL_BEATS = [3, 27, 41, 54, 67];
-// The original recording's attacks drive the restored melting engine.
+// The recording's attacks control the flow of printed ink.
 const MELT_BEATS = [
   0.025, 0.299, 0.586, 0.874, 1.161, 1.442, 1.729, 2.015, 2.302, 2.589, 2.876, 3.157, 3.444, 3.729,
   4.011,
@@ -1444,7 +1445,7 @@ function preloadChallenge() {
 
 function setupChallenge() {
   const canvas = makeCanvas(
-    "Falling products, melting images and a human-shaped void. Click the warning signs.",
+    "Collect products and watch them become your identity. Click the sale labels.",
   );
   canvas.elt.tabIndex = 0;
   storeBackground = makeStoreBackground(false);
@@ -1469,6 +1470,7 @@ function drawChallenge() {
 
 function startChallenge() {
   state = "collect";
+  collectedItems = [];
   document.getElementById("challenge-intro").hidden = true;
   document.getElementById("challenge-pause").disabled = false;
   document.getElementById("challenge-restart").disabled = false;
@@ -1489,6 +1491,7 @@ function restartChallenge() {
   stopSounds();
   products = [];
   words = [];
+  if (datamosh) datamosh.dispose();
   datamosh = null;
   meltSource = null;
   signals = [];
@@ -1497,9 +1500,13 @@ function restartChallenge() {
   paused = false;
   returnAt = 0;
   document.getElementById("challenge-stage").classList.remove("is-art-ending");
+  resetChallengeButtons();
+  startChallenge();
+}
+
+function resetChallengeButtons() {
   document.getElementById("challenge-pause").textContent = "PAUSE";
   document.getElementById("challenge-pause").setAttribute("aria-pressed", "false");
-  startChallenge();
 }
 
 function drawShopping() {
@@ -1558,6 +1565,7 @@ function catchProduct(product) {
   addWord(PRODUCT_NAMES[product.kind], product.x, product.y);
   addWord("BETTER YOU?", product.x + 70, product.y + 45);
   collected++;
+  collectedItems.push({ kind: product.kind, colour: product.colour });
   playEffect("item", 0.3);
   if (collected === 6) beginMelt(product.x, product.y);
 }
@@ -1586,24 +1594,24 @@ function drawWords() {
 function beginMelt(x, y) {
   drawShopping();
   state = "melt";
-  meltSource = get().canvas;
+  meltSource = get();
   loopEffect("datamosh", 0.045);
-  datamosh = new ChallengeDatamosh(meltSource, { track: new MeltBeatClock() });
+  datamosh = new ConsumptionMelt(meltSource, collectedItems, new MeltBeatClock());
   meltAt(x, y);
-  setStatus("Each click now melts another area. Click around the picture, or press Enter.");
+  setStatus("Your purchases are taking over. Click another area, or press Enter, to print more.");
 }
 
 function meltAt(x, y) {
   if (!datamosh) return;
-  datamosh.addDamage(x, y, meltSource);
+  datamosh.addDamage(x, y);
   meltClicks = datamosh.hits;
 }
 
-// Keep the original colour processing, feedback and melting ribbons unchanged.
+// The picked objects become advertising; feedback stretches their own printed colours.
 function drawMelting() {
   loopEffect("datamosh", 0.045);
   datamosh.audioTrack.tick(min(deltaTime / 1000, 0.05));
-  datamosh.draw(drawingContext, min(deltaTime / 1000, 0.05), meltSource);
+  datamosh.draw(min(deltaTime / 1000, 0.05));
   drawWords();
   if (state === "melt" && datamosh.complete) beginSignals();
 }
@@ -1617,11 +1625,11 @@ function beginSignals() {
   buildSignals();
   replaySignals();
   setStatus(
-    "The cart is full, but a human-shaped void remains. Click a warning sign, or press Enter, to tear the image further.",
+    "Your purchases have become you. Click a sale label, or press Enter, to keep upgrading.",
   );
 }
 
-// Adapt p5.sound's playhead to the old visual engine's looping beat clock.
+// Read p5.sound's looping playhead to keep printed drips on the recording's cues.
 class MeltBeatClock {
   constructor() {
     this.beats = MELT_BEATS;
@@ -1698,7 +1706,6 @@ function beginReturn() {
   state = "return";
   returnEnd = millis() + 1900;
   meltSignalImage(signals[0]);
-  datamosh.draw(drawingContext, 0);
   meltPicture = get();
   stopSounds();
   playEffect("transition", 0.4);
@@ -1707,13 +1714,7 @@ function beginReturn() {
 
 function drawReturn() {
   image(meltPicture, 0, 0, W, H);
-  for (let i = 0; i < 18; i++) {
-    const y = random(H - 40);
-    copy(meltPicture, 0, y, W, 20, random(-150, 150), y, W, random(20, 80));
-  }
-  fill(random(PALETTE));
-  noStroke();
-  rect(random(W), random(H), random(100, 600), random(5, 30));
+  drawRetailReturn();
   if (millis() >= returnEnd) {
     stopSounds();
     location.href = "./";
@@ -1776,604 +1777,263 @@ class Product {
   }
 }
 
-function drawProduct(kind, colour) {
-  if (kind === 0) drawShirt();
-  if (kind === 1) drawBook();
-  if (kind === 2) drawBottle();
-  if (kind === 3) drawHeadphones(colour);
-  if (kind === 4) drawPlant();
+function drawProduct(kind, colour, painter = window) {
+  if (kind === 0) drawShirt(painter);
+  if (kind === 1) drawBook(painter);
+  if (kind === 2) drawBottle(painter);
+  if (kind === 3) drawHeadphones(colour, painter);
+  if (kind === 4) drawPlant(painter);
 }
 
-function drawShirt() {
-  beginShape();
-  for (const point of SHIRT_POINTS) vertex(point[0], point[1]);
-  endShape(CLOSE);
-  line(-20, -60, 20, -60);
-  fill("#FFF6DF");
-  rect(-20, -15, 40, 30);
+function drawShirt(painter = window) {
+  painter.beginShape();
+  for (const point of SHIRT_POINTS) painter.vertex(point[0], point[1]);
+  painter.endShape(CLOSE);
+  painter.line(-20, -60, 20, -60);
+  painter.fill("#FFF6DF");
+  painter.rect(-20, -15, 40, 30);
 }
 
-function drawBook() {
-  rect(-55, -70, 110, 140);
-  fill("#FFF6DF");
-  rect(-45, 50, 110, 20);
-  line(-38, -65, -38, 48);
-  line(-20, -25, 38, -25);
-  line(-20, -5, 25, -5);
+function drawBook(painter = window) {
+  painter.rect(-55, -70, 110, 140);
+  painter.fill("#FFF6DF");
+  painter.rect(-45, 50, 110, 20);
+  painter.line(-38, -65, -38, 48);
+  painter.line(-20, -25, 38, -25);
+  painter.line(-20, -5, 25, -5);
 }
 
-function drawBottle() {
-  rect(-42, -45, 84, 110, 14);
-  fill("#FFF6DF");
-  rect(-25, -70, 50, 25);
-  rect(-35, -5, 70, 35);
-  line(-22, 10, 22, 10);
+function drawBottle(painter = window) {
+  painter.rect(-42, -45, 84, 110, 14);
+  painter.fill("#FFF6DF");
+  painter.rect(-25, -70, 50, 25);
+  painter.rect(-35, -5, 70, 35);
+  painter.line(-22, 10, 22, 10);
 }
 
-function drawHeadphones(colour) {
-  noFill();
-  strokeWeight(14);
-  arc(0, -5, 120, 125, PI, TWO_PI);
-  strokeWeight(4);
-  fill(colour);
-  rect(-75, -10, 35, 65, 8);
-  rect(40, -10, 35, 65, 8);
+function drawHeadphones(colour, painter = window) {
+  painter.noFill();
+  painter.strokeWeight(14);
+  painter.arc(0, -5, 120, 125, PI, TWO_PI);
+  painter.strokeWeight(4);
+  painter.fill(colour);
+  painter.rect(-75, -10, 35, 65, 8);
+  painter.rect(40, -10, 35, 65, 8);
 }
 
-function drawPlant() {
-  line(0, 35, 0, -65);
-  ellipse(-25, -30, 65, 26);
-  ellipse(25, -60, 65, 26);
-  fill("#EE2724");
-  triangle(-50, 20, 50, 20, 0, 90);
-  rect(-55, 15, 110, 15);
+function drawPlant(painter = window) {
+  painter.line(0, 35, 0, -65);
+  painter.ellipse(-25, -30, 65, 26);
+  painter.ellipse(25, -60, 65, 26);
+  painter.fill("#EE2724");
+  painter.triangle(-50, 20, 50, 20, 0, 90);
+  painter.rect(-55, 15, 110, 15);
 }
 
-// 7. DATAMOSH IMAGE FEEDBACK
+// 7. CONSUMPTION MELT — PRINTED GOODS TAKE OVER THE SCREEN
+// AI-assisted, edited for ME-MARRT. All colours come from the store's existing palette.
+// Feedback stretches real catalogue artwork; no RGB inversion or unrelated glitch texture.
+const PRINT_INKS = ["#087CFF", "#EE2724"];
+const PRINT_PAPERS = ["#FFF6DF", "#FDCFDE", "#FFFF00"];
 
-// SPDX-License-Identifier: GPL-3.0-or-later
-// AI-assisted project implementation, revised into named pixel, beat and melt helpers.
-// Local feedback preserves each clicked patch while gravity stretches its pixels.
-const DATAMOSH_CHANNEL_ORDERS = [
-  [0, 1, 2],
-  [1, 2, 0],
-  [2, 0, 1],
-  [1, 0, 2],
-  [0, 2, 1],
-  [2, 1, 0],
-];
-const DATAMOSH_INVERTED_CHANNELS = [-1, -1, -1, 0, 1, 2];
+function makeCatalogueCard(item, number) {
+  const card = createGraphics(240, 180);
+  card.pixelDensity(1);
+  card.background(PRINT_PAPERS[number % PRINT_PAPERS.length]);
+  paintCatalogueFrame(card, item, number);
+  card.push();
+  card.translate(120, 85);
+  card.scale(0.58);
+  card.stroke(PRINT_INKS[number % 2]);
+  card.strokeWeight(4);
+  card.fill(PRINT_INKS[number % 2]);
+  drawProduct(item.kind, PRINT_INKS[number % 2], card);
+  card.pop();
+  return card;
+}
 
-class ChallengeDatamosh {
-  constructor(source, { track = null } = {}) {
-    this.initializeDimensions(source);
-    this.initializeMeltState();
-    this.initializeBeatState(track);
-    this.createSurfaces();
-    this.pixelScratch = new Float64Array(3);
-    this.sourcePixel = new Float64Array(3);
-    this.cleanCtx.drawImage(source, 0, 0, this.w, this.h);
-    this.prepareTexture();
+function paintCatalogueFrame(card, item, number) {
+  card.stroke(PRINT_INKS[number % 2]);
+  card.strokeWeight(2);
+  card.noFill();
+  card.rect(4, 4, 232, 172);
+  card.noStroke();
+  card.fill(PRINT_INKS[number % 2]);
+  card.textFont("Arial");
+  card.textStyle(BOLD);
+  card.textSize(12);
+  card.text("ME-MARRT / NEW YOU", 13, 20);
+  card.text(PRODUCT_NAMES[item.kind], 13, 151);
+  paintCatalogueBarcode(card, number);
+}
+
+function paintCatalogueBarcode(card, number) {
+  card.fill("#087CFF");
+  for (let x = 13; x < 145; x += 4) {
+    const thick = (x + number * 7) % 11 < 5 ? 2 : 1;
+    card.rect(x, 158, thick, 11);
+  }
+  card.textSize(12);
+  card.text("100% FREE", 159, 168);
+}
+
+class ConsumptionMelt {
+  constructor(source, items, audioTrack) {
+    this.w = W / 2;
+    this.h = H / 2;
+    this.field = createGraphics(this.w, this.h);
+    this.memory = createGraphics(this.w, this.h);
+    this.field.pixelDensity(1);
+    this.memory.pixelDensity(1);
+    this.field.image(source, 0, 0, this.w, this.h);
+    this.cards = items.map((item, i) => makeCatalogueCard(item, i));
+    this.audioTrack = audioTrack;
+    this.resetState();
   }
 
-  initializeDimensions(source) {
-    this.width = source.width;
-    this.height = source.height;
-    this.w = 960;
-    this.h = 540;
-  }
-
-  initializeMeltState() {
+  resetState() {
     this.time = 0;
     this.hits = 0;
     this.complete = false;
-    this.floodAt = null;
-    this.seed = Math.random() * 10000;
     this.cells = new Uint8Array(32 * 18);
-    this.regions = [];
     this.ribbons = [];
-    this.accumulator = 0;
-    this.nextFlow = 0;
-  }
-
-  initializeBeatState(track) {
-    this.audioTrack = track;
-    this.audioCycle = 0;
-    this.audioCue = 0;
-    this.beatPulse = 0;
-    this.lastAudioBeatAt = -Infinity;
+    this.nextPrint = 0;
+    this.printIndex = 0;
     this.beatCount = 0;
-    this.beatLog = [];
-  }
-
-  createSurfaces() {
-    this.clean = this.surface();
-    this.texture = this.surface();
-    this.field = this.surface();
-    this.history = this.surface();
-    this.cleanCtx = this.clean.getContext("2d");
-    this.textureCtx = this.texture.getContext("2d", { willReadFrequently: true });
-    this.fieldCtx = this.field.getContext("2d");
-    this.historyCtx = this.history.getContext("2d");
-  }
-
-  surface() {
-    const canvas = document.createElement("canvas");
-    canvas.width = this.w;
-    canvas.height = this.h;
-    return canvas;
-  }
-
-  hash(n) {
-    const value = Math.sin(n * 127.1 + this.seed) * 43758.5453;
-    return value - Math.floor(value);
-  }
-
-  random(min, max) {
-    return min + Math.random() * (max - min);
+    this.previousCue = -1;
+    this.beatPulse = 0;
+    this.accumulator = 0;
   }
 
   get coverage() {
-    return this.cells.reduce((sum, value) => sum + value, 0) / this.cells.length;
+    return this.cells.reduce((sum, cell) => sum + cell, 0) / this.cells.length;
   }
 
-  prepareTexture(source) {
-    if (source) this.cleanCtx.drawImage(source, 0, 0, this.w, this.h);
-    const ctx = this.textureCtx;
-    ctx.drawImage(this.clean, 0, 0);
-    ctx.globalAlpha = 0.65;
-    ctx.drawImage(this.field, 0, 0);
-    ctx.globalAlpha = 1;
-    const image = ctx.getImageData(0, 0, this.w, this.h);
-    this.colourTexture(image.data);
-    ctx.putImageData(image, 0, 0);
-  }
-
-  channelTurns() {
-    const columns = Math.ceil(this.w / 18);
-    const turns = [];
-    for (let i = 0; i < columns * Math.ceil(this.h / 12); i++) {
-      turns[i] = Math.floor(this.hash(i + this.hits * 13) * 6);
-    }
-    return { columns, turns };
-  }
-
-  colourTexture(data) {
-    const { columns, turns } = this.channelTurns();
-    for (let y = 0; y < this.h; y++) {
-      for (let x = 0; x < this.w; x++) {
-        const index = (y * this.w + x) * 4;
-        const turn = turns[Math.floor(y / 12) * columns + Math.floor(x / 18)];
-        this.colourPixel(data, index, turn);
-      }
-    }
-  }
-
-  colourPixel(data, index, turn) {
-    const rgb = this.pixelScratch;
-    for (let channel = 0; channel < 3; channel++) rgb[channel] = data[index + channel];
-    this.transformPixel(rgb, turn);
-    for (let channel = 0; channel < 3; channel++) {
-      data[index + channel] = Math.round(rgb[channel] / 32) * 32;
-    }
-  }
-
-  transformPixel(rgb, turn) {
-    const brightGray = Math.max(...rgb) - Math.min(...rgb) < 24 && rgb[0] > 170;
-    if (brightGray) this.brightenPixel(rgb);
-    else {
-      this.saturatePixel(rgb);
-      this.shiftChannels(rgb, turn);
-    }
-  }
-
-  brightenPixel(rgb) {
-    for (let channel = 0; channel < 3; channel++) {
-      rgb[channel] = Math.min(255, rgb[channel] * 1.1);
-    }
-  }
-
-  saturatePixel(rgb) {
-    for (let channel = 0; channel < 3; channel++) {
-      rgb[channel] = Math.max(0, Math.min(255, (rgb[channel] - 100) * 1.8 + 80));
-    }
-  }
-
-  shiftChannels(rgb, turn) {
-    for (let channel = 0; channel < 3; channel++) this.sourcePixel[channel] = rgb[channel];
-    const order = DATAMOSH_CHANNEL_ORDERS[turn];
-    for (let channel = 0; channel < 3; channel++) rgb[channel] = this.sourcePixel[order[channel]];
-    const inverted = DATAMOSH_INVERTED_CHANNELS[turn];
-    if (inverted >= 0) rgb[inverted] = 255 - rgb[inverted];
-  }
-
-  mark(x, y, w, h) {
-    const left = Math.max(0, Math.floor(x / 30));
-    const right = Math.min(31, Math.floor((x + w) / 30));
-    const top = Math.max(0, Math.floor(y / 30));
-    const bottom = Math.min(17, Math.floor((y + h) / 30));
-    for (let row = top; row <= bottom; row++) {
-      for (let col = left; col <= right; col++) this.cells[row * 32 + col] = 1;
-    }
-  }
-
-  addDamage(x, y, source) {
+  addDamage(x, y) {
     if (this.complete) return;
     this.hits++;
-    this.prepareTexture(source);
-    this.makeRegion(
-      (x / this.width) * this.w,
-      (y / this.height) * this.h,
-      Math.min(157, 74 + this.hits * 7),
-    );
-  }
-
-  makeRegion(x, y, radius) {
-    x = Math.max(0, Math.min(this.w, x));
-    y = Math.max(0, Math.min(this.h, y));
-    for (let dy = -radius; dy < radius; dy += 9) {
-      for (let dx = -radius; dx < radius; dx += 12) {
-        if (!this.insideRegion(dx, dy, radius)) continue;
-        this.paintRegionFragment(this.fieldCtx, x + dx, y + dy);
-      }
+    for (let i = 0; i < 3; i++) {
+      const px = constrain(x / 2 + random(-65, 65), 70, this.w - 70);
+      const py = constrain(y / 2 + random(-35, 35), 55, this.h - 55);
+      this.stamp(px, py, random(145, 220));
+      this.addRibbon(px, py);
     }
-    this.addRegion({ x, y, radius, born: this.time }, 58);
   }
 
-  insideRegion(dx, dy, radius) {
-    return (
-      (dx * dx) / (radius * radius) + (dy * dy) / (radius * radius) <= 0.8 + Math.random() * 0.3
-    );
+  stamp(x, y, width) {
+    const card = this.cards[this.printIndex++ % this.cards.length];
+    const height = width * 0.75;
+    const g = this.field;
+    g.push();
+    g.translate(x, y);
+    g.rotate(random(-0.07, 0.07));
+    g.image(card, -width / 2, -height / 2, width, height);
+    g.pop();
+    this.mark(x - width / 2, y - height / 2, width, height);
   }
 
-  paintRegionFragment(ctx, px, py) {
-    const w = this.random(10, 27);
-    const h = this.random(7, 19);
-    const { sx, sy } = this.fragmentSource(px, py);
-    this.drawTextureFragment(ctx, sx, sy, px, py, w, h);
-    this.fragmentFringe(ctx, px, py, w);
-    this.mark(px, py, w, h);
+  mark(x, y, width, height) {
+    const left = max(0, floor(x / 30));
+    const right = min(31, floor((x + width) / 30));
+    const top = max(0, floor(y / 30));
+    const bottom = min(17, floor((y + height) / 30));
+    for (let row = top; row <= bottom; row++) {
+      for (let column = left; column <= right; column++) this.cells[row * 32 + column] = 1;
+    }
   }
 
-  fragmentSource(px, py) {
-    const local = Math.random() > 0.22;
-    const sx = local
-      ? Math.max(0, Math.min(this.w - 45, px + this.random(-25, 25)))
-      : this.random(250, 650);
-    const sy = local
-      ? Math.max(0, Math.min(this.h - 35, py + this.random(-20, 20)))
-      : this.random(40, 490);
-    return { sx, sy };
+  addRibbon(x, y) {
+    const px = constrain(x + random(-60, 60), 0, this.w - 40);
+    const py = constrain(y + random(-30, 30), 0, this.h - 30);
+    this.ribbons.push({ x: px, y: py, w: random(7, 28), h: random(5, 16), length: 0, age: 0 });
+    while (this.ribbons.length > 72) this.ribbons.shift();
   }
 
-  drawTextureFragment(ctx, sx, sy, px, py, w, h) {
-    ctx.drawImage(this.texture, sx, sy, this.random(6, 40), this.random(3, 25), px, py, w, h);
-  }
-
-  fragmentFringe(ctx, x, y, w) {
-    if (Math.random() <= 0.7) return;
-    ctx.fillStyle = Math.random() > 0.5 ? "#00E000" : "#FF2396";
-    ctx.fillRect(x, y, w, 1);
-  }
-
-  addRegion(region, ribbonCount) {
-    this.regions.push(region);
-    this.regions = this.regions.slice(-24);
-    for (let i = 0; i < ribbonCount; i++) this.addRibbon(region);
-    this.historyCtx.drawImage(this.field, 0, 0);
-  }
-
-  addRibbon(region) {
-    const x = region.x + this.random(-region.radius, region.radius);
-    const y = region.y + this.random(-region.radius * 0.7, region.radius * 0.7);
-    this.ribbons.push(this.makeRibbon(x, y));
-    this.ribbons = this.ribbons.slice(-650);
-  }
-
-  makeRibbon(x, y) {
-    return {
-      x,
-      y,
-      width: this.random(2, 14),
-      length: this.random(3, 22),
-      speed: this.random(34, 112),
-      shear: this.random(-0.18, 0.95),
-      sx: Math.max(0, Math.min(this.w - 24, x + this.random(-35, 35))),
-      sy: Math.max(0, Math.min(this.h - 28, y + this.random(-28, 28))),
-      sampleHeight: this.random(2, 18),
-      born: this.time,
-      fringe: Math.random() > 0.5 ? "#00EDFF" : "#FF009E",
-    };
-  }
-
-  updateAudioBeat(dt) {
-    this.beatPulse = Math.max(0, this.beatPulse - dt * 8);
+  updateBeat() {
     const track = this.audioTrack;
-    const elapsed = track?.elapsed();
-    if (!track || !Number.isFinite(elapsed) || elapsed < 0 || !track.beats.length) return;
-    if (!track.loop && this.audioCue >= track.beats.length) return;
-    const duration = track.duration;
-    if (!Number.isFinite(duration) || duration <= 0) return;
-    this.skipStaleCycles(track, elapsed, duration);
-    this.consumeAudioCues(track, elapsed, duration);
-    this.beatPulse = Math.max(0, 1 - (elapsed - this.lastAudioBeatAt) * 8);
+    const elapsed = track ? track.elapsed() : this.time;
+    const duration = track ? track.duration : 4.281;
+    const beats = track ? track.beats : MELT_BEATS;
+    const cycle = floor(elapsed / duration);
+    const cue = beats.filter((beat) => beat <= elapsed % duration).length + cycle * beats.length;
+    this.beatPulse *= 0.8;
+    if (cue <= this.previousCue) return;
+    this.beatCount += max(0, cue - max(0, this.previousCue));
+    this.previousCue = cue;
+    this.beatPulse = 1;
+    if (this.hits >= 3) this.addRibbon(random(50, this.w - 50), random(80, this.h - 80));
   }
 
-  skipStaleCycles(track, elapsed, duration) {
-    if (!track.loop || elapsed - this.audioCycle * duration <= duration * 2) return;
-    this.audioCycle = Math.floor(elapsed / duration);
-    this.audioCue = 0;
+  step(dt) {
+    this.memory.clear();
+    this.memory.image(this.field, 0, 0);
+    this.updateBeat();
+    this.meltRibbons(dt);
+    this.printMore();
+    if (this.hits >= 6 && this.coverage > 0.86 && this.time > 3) this.complete = true;
   }
 
-  consumeAudioCues(track, elapsed, duration) {
-    for (let count = 0; count < 32; count++) {
-      const expected = this.audioCycle * duration + track.beats[this.audioCue];
-      if (elapsed < expected) break;
-      this.recordAudioCue(expected, elapsed);
-      this.audioCue++;
-      if (this.audioCue === track.beats.length) {
-        if (!track.loop) break;
-        this.audioCue = 0;
-        this.audioCycle++;
-      }
+  meltRibbons(dt) {
+    for (let i = this.ribbons.length - 1; i >= 0; i--) {
+      const ribbon = this.ribbons[i];
+      ribbon.age += dt;
+      ribbon.length += dt * (26 + this.beatPulse * 120);
+      this.stretchRibbon(ribbon);
+      if (ribbon.age > 2.8) this.ribbons.splice(i, 1);
     }
   }
 
-  recordAudioCue(expected, elapsed) {
-    this.lastAudioBeatAt = expected;
-    this.beatCount++;
-    this.beatLog.push({ beat: Number(expected.toFixed(3)), at: Number(elapsed.toFixed(3)) });
-    this.beatLog = this.beatLog.slice(-16);
-    for (let i = 0; i < 8 && this.regions.length; i++) this.addRibbon(this.randomRegion());
+  stretchRibbon(ribbon) {
+    const { x, y, w, h, length } = ribbon;
+    this.field.image(this.memory, x, y, w, h + length, x, y, w, h);
+    this.mark(x, y, w, h + length);
   }
 
-  randomRegion() {
-    return this.regions[Math.floor(Math.random() * this.regions.length)];
+  // The ads spread in a loose print grid. Each extra purchase starts another print run.
+  printMore() {
+    if (this.hits < 3 || this.time < this.nextPrint) return;
+    this.nextPrint = this.time + 0.28;
+    const index = this.printIndex % 20;
+    const x = (index % 5) * 192 + 96 + random(-12, 12);
+    const y = floor(index / 5) * 140 + 65 + random(-8, 8);
+    this.stamp(x, y, random(190, 220));
   }
 
-  feedback(dt) {
-    const ctx = this.fieldCtx;
-    ctx.drawImage(this.history, 0, 0);
-    const pulse = this.audioTrack ? this.beatPulse : 1;
-    this.transportFragments(ctx, pulse);
-    this.stretchRibbons(ctx, dt);
-    this.removeInactiveRibbons();
-    this.addAmbientFlow();
-    this.historyCtx.drawImage(this.field, 0, 0);
-    this.updateFlood();
+  absorb(fragment, x, y, width, height) {
+    this.field.image(fragment, x, y, width, height);
+    this.mark(x, y, width, height);
+    for (let i = 0; i < 6; i++) this.addRibbon(x + random(width), y + random(height));
   }
 
-  transportFragments(ctx, pulse) {
-    for (let i = 0; i < 1 + Math.round(8 * pulse) && this.regions.length; i++) {
-      this.transportFragment(ctx, this.randomRegion(), pulse);
-    }
-  }
-
-  transportFragment(ctx, region, pulse) {
-    const bounds = this.transportBounds(region);
-    this.drawTransport(ctx, bounds, pulse);
-  }
-
-  transportBounds(region) {
-    const sx = Math.max(
-      0,
-      Math.min(this.w - 60, region.x + this.random(-region.radius, region.radius)),
-    );
-    const sy = Math.max(
-      0,
-      Math.min(this.h - 16, region.y + this.random(-region.radius, region.radius + 160)),
-    );
-    const w = Math.min(this.w - sx, this.random(20, 150));
-    const h = this.random(2, 12);
-    return { sx, sy, w, h };
-  }
-
-  drawTransport(ctx, { sx, sy, w, h }, pulse) {
-    ctx.drawImage(
-      this.history,
-      sx,
-      sy,
-      w,
-      h,
-      sx + this.random(-8, 13) * pulse,
-      sy + this.random(3, 13) * (0.2 + pulse),
-      w,
-      h,
-    );
-  }
-
-  stretchRibbons(ctx, dt) {
-    for (const ribbon of this.ribbons) {
-      this.advanceRibbon(ribbon, dt);
-      this.drawRibbon(ctx, ribbon);
-    }
-  }
-
-  advanceRibbon(ribbon, dt) {
-    const previous = ribbon.length;
-    const flow = this.audioTrack ? 0.2 + this.beatPulse * 3 : 1;
-    ribbon.length = Math.min(this.h + 180, ribbon.length + ribbon.speed * dt * flow);
-    const endX = ribbon.x + ribbon.shear * ribbon.length;
-    this.mark(endX, ribbon.y + previous, ribbon.width, Math.max(4, ribbon.length - previous));
-  }
-
-  drawRibbon(ctx, ribbon) {
-    ctx.save();
-    ctx.translate(Math.round(ribbon.x), Math.round(ribbon.y));
-    ctx.transform(1, 0, ribbon.shear, 1, 0, 0);
-    ctx.imageSmoothingEnabled = false;
-    this.paintRibbonTexture(ctx, ribbon);
-    ctx.globalAlpha = 0.55;
-    ctx.fillStyle = ribbon.fringe;
-    ctx.fillRect(0, 0, 1, ribbon.length);
-    ctx.restore();
-  }
-
-  paintRibbonTexture(ctx, ribbon) {
-    ctx.drawImage(
-      this.texture,
-      ribbon.sx,
-      ribbon.sy,
-      ribbon.width,
-      ribbon.sampleHeight,
-      0,
-      0,
-      ribbon.width,
-      ribbon.length,
-    );
-  }
-
-  removeInactiveRibbons() {
-    this.ribbons = this.ribbons.filter(
-      (ribbon) => ribbon.y + ribbon.length < this.h + 180 && this.time - ribbon.born < 13,
-    );
-  }
-
-  addAmbientFlow() {
-    if (this.audioTrack || this.time < this.nextFlow || !this.regions.length) return;
-    this.nextFlow = this.time + 0.13;
-    for (let i = 0; i < 3; i++) this.addRibbon(this.randomRegion());
-  }
-
-  // Fill the final gaps only after several clicked patches have already merged.
-  updateFlood() {
-    if (this.floodAt === null && this.hits >= 5 && this.coverage >= 0.74) this.floodAt = this.time;
-    if (this.floodAt === null || this.complete) return;
-    this.spillIntoGaps();
-    if (this.coverage > 0.98 && this.time - this.floodAt > 1.1) this.complete = true;
-  }
-
-  spillIntoGaps() {
-    const gaps = [];
-    this.cells.forEach((value, index) => {
-      if (!value) gaps.push(index);
-    });
-    for (let i = 0; i < 4 && gaps.length; i++) {
-      const index = gaps.splice(Math.floor(Math.random() * gaps.length), 1)[0];
-      this.makeRegion((index % 32) * 30 + 15, Math.floor(index / 32) * 30 + 15, 44);
-    }
-  }
-
-  meltNotification(packet) {
-    const rect = this.notificationRect(packet);
-    const ctx = this.fieldCtx;
-    ctx.save();
-    ctx.translate(rect.x, rect.y);
-    this.paintNotification(ctx, rect, packet);
-    ctx.restore();
-    this.textureCtx.drawImage(this.field, 0, 0);
-    const region = {
-      x: rect.x + rect.w / 2,
-      y: rect.y + rect.h / 2,
-      radius: rect.w * 0.55,
-      born: this.time,
-    };
-    this.addRegion(region, 70);
-  }
-
-  notificationRect(packet) {
-    return {
-      x: packet.x * this.w,
-      y: packet.y * this.h,
-      w: Math.max(110, packet.width * this.w),
-      h: Math.max(75, packet.height * this.h),
-    };
-  }
-
-  paintNotification(ctx, { w, h }, packet) {
-    this.paintWindowFrame(ctx, w, h);
-    this.paintWindowTitle(ctx, packet.title);
-    this.paintWindowWarning(ctx);
-    this.paintWindowMessage(ctx, w, packet.message);
-    this.paintWindowButton(ctx, w, h);
-  }
-
-  paintWindowFrame(ctx, w, h) {
-    ctx.fillStyle = "#C9C9C9";
-    ctx.fillRect(0, 0, w, h);
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(1, 1, w - 2, h - 2);
-    ctx.fillStyle = "#0610AC";
-    ctx.fillRect(4, 4, w - 8, 16);
-  }
-
-  paintWindowTitle(ctx, title) {
-    ctx.font = "bold 9px monospace";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillText(title.slice(0, 32), 9, 15);
-  }
-
-  paintWindowWarning(ctx) {
-    ctx.fillStyle = "#FFFF00";
-    ctx.beginPath();
-    ctx.moveTo(16, 31);
-    ctx.lineTo(6, 50);
-    ctx.lineTo(26, 50);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "#111111";
-    ctx.font = "bold 12px monospace";
-    ctx.fillText("!", 13, 47);
-  }
-
-  paintWindowMessage(ctx, width, message) {
-    ctx.font = "10px Arial";
-    const state = { line: "", row: 0 };
-    for (const word of message.split(" ")) {
-      if (!this.appendMessageWord(ctx, word, width, state)) break;
-    }
-    ctx.fillText(state.line, 35, 35 + state.row * 12);
-  }
-
-  appendMessageWord(ctx, word, width, state) {
-    if (ctx.measureText(state.line + word).width > width - 45 && state.line) {
-      ctx.fillText(state.line, 35, 35 + state.row * 12);
-      state.row++;
-      state.line = "";
-      if (state.row > 3) return false;
-    }
-    state.line += word + " ";
-    return true;
-  }
-
-  paintWindowButton(ctx, width, height) {
-    ctx.strokeStyle = "#111111";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(width / 2 - 23, height - 25, 46, 17);
-    ctx.font = "10px Arial";
-    ctx.fillText("OK", width / 2 - 8, height - 13);
-  }
-
-  draw(ctx, dt, source) {
+  draw(dt) {
     this.time += dt;
     this.accumulator += dt;
-    this.updateAudioBeat(dt);
-    if (source) this.cleanCtx.drawImage(source, 0, 0, this.w, this.h);
     if (this.accumulator >= 1 / 30) {
-      this.feedback(this.accumulator);
+      this.step(this.accumulator);
       this.accumulator = 0;
     }
-    ctx.save();
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(this.clean, 0, 0, this.width, this.height);
-    ctx.drawImage(this.field, 0, 0, this.width, this.height);
-    ctx.restore();
+    image(this.field, 0, 0, W, H);
+  }
+
+  dispose() {
+    this.field.remove();
+    this.memory.remove();
+    for (const card of this.cards) card.remove();
   }
 }
 
-// 8. GENERATIVE WARNING SIGNS AND ALERTS
+// 8. SALE LABELS AND SCROLLING PROMOTIONS
 
 // SPDX-License-Identifier: GPL-3.0-or-later
-// AI-assisted, revised for ME-MARRT: generative identity warnings over the original melt.
-// The supplied reference guides the red hexagons and hazard stripes; all labels are project-specific.
-const SIGNAL_WORDS = ["MORE", "AGAIN", "NEW ME", "WANT", "NEED", "NOT YET"];
-const ALERT_MESSAGE = "ALERT / CLICK A HEXAGON / TRY ANOTHER YOU / ";
+// AI-assisted, edited for ME-MARRT: sale language repeats while purchases take over.
+// Pointed retail tags keep the upgrade action visible inside the catalogue collapse.
+const SIGNAL_WORDS = ["MORE", "NEW ME", "BETTER", "UPGRADE", "ONE MORE", "FREE"];
+const ALERT_MESSAGE = "ME-MARRT / CLICK A SALE LABEL / TRY ANOTHER YOU / ";
 const LOOP_MESSAGE = "WANT > NEED > WANT / THE NEXT YOU IS NEVER THE LAST / ";
 
 function buildSignals() {
   signals = [];
-  addGeneratedSignal("ME?", true);
+  addGeneratedSignal("NEW YOU", true);
   for (let i = 0; i < 8; i++) addGeneratedSignal(random(SIGNAL_WORDS), i % 3 === 0);
   signalBaseCount = signals.length;
 }
@@ -2383,7 +2043,7 @@ function addGeneratedSignal(word, solid = false) {
   const h = random(125, 215);
   const x = randomSignalX(w, random() < 0.5 ? -1 : 1);
   const y = random(h / 2 + 110, H - h / 2 - 120);
-  signals.push(new WarningSignal(x, y, w, h, word, solid, random(-0.18, 0.18)));
+  signals.push(new SaleLabel(x, y, w, h, word, solid, random(-0.18, 0.18)));
 }
 
 function addSignalEchoes(count) {
@@ -2391,7 +2051,7 @@ function addSignalEchoes(count) {
   while (signals.length > 32) signals.splice(signalBaseCount, 1);
 }
 
-class WarningSignal {
+class SaleLabel {
   constructor(x, y, w, h, word, solid, angle) {
     this.number = ++signalNumber;
     this.x = x;
@@ -2446,61 +2106,59 @@ class WarningSignal {
   drawClickRing() {
     const hovered = this === hoveredSignal;
     noFill();
-    stroke(255, 255, 0, hovered ? 255 : 90 + 55 * sin(frameCount * 0.06 + this.number));
+    stroke(8, 124, 255, hovered ? 255 : 90 + 55 * sin(frameCount * 0.06 + this.number));
     strokeWeight(hovered ? 3 : 1);
-    this.hexagon(hovered ? 1.08 : 1.04);
+    this.priceTag(hovered ? 1.08 : 1.04);
+  }
+
+  selected() {
+    return this === hoveredSignal || millis() < this.activeUntil;
+  }
+
+  ink() {
+    return this.solid && !this.selected() ? "#FFF6DF" : "#087CFF";
   }
 
   drawPanel() {
-    const selected = this === hoveredSignal || millis() < this.activeUntil;
-    stroke(selected ? "#FFFF00" : "#EE2724");
-    strokeWeight(3);
-    fill(selected ? "#FFFF00" : this.solid ? "#EE2724" : "#090203");
-    this.hexagon(1);
-    noFill();
-    stroke(this.solid || selected ? "#450707" : "#EE2724");
-    strokeWeight(1.5);
-    this.hexagon(0.92);
-    if (this.number % 3 === 0) {
-      drawHazardBar(-this.w * 0.32, -this.h / 2 - 20, this.w * 0.64);
-      drawHazardBar(-this.w * 0.32, this.h / 2 + 4, this.w * 0.64);
-    }
+    stroke("#087CFF");
+    strokeWeight(2);
+    fill(this.selected() ? "#FFFF00" : this.solid ? "#EE2724" : "#FFF6DF");
+    this.priceTag(1);
+    noStroke();
+    fill(this.ink());
+    circle(this.w * 0.37, 0, 9);
   }
 
-  hexagon(amount) {
+  priceTag(amount) {
     const w = this.w * amount;
     const h = this.h * amount;
     beginShape();
-    vertex(-w / 2, 0);
-    vertex(-w * 0.34, -h / 2);
-    vertex(w * 0.34, -h / 2);
+    vertex(-w / 2, -h / 2);
+    vertex(w * 0.33, -h / 2);
     vertex(w / 2, 0);
-    vertex(w * 0.34, h / 2);
-    vertex(-w * 0.34, h / 2);
+    vertex(w * 0.33, h / 2);
+    vertex(-w / 2, h / 2);
     endShape(CLOSE);
   }
 
   drawLabel() {
     noStroke();
-    fill(
-      this.solid || this === hoveredSignal || millis() < this.activeUntil ? "#180003" : "#EE2724",
-    );
+    fill(this.ink());
     textAlign(CENTER, CENTER);
-    textFont("Impact");
-    textStyle(NORMAL);
-    textSize(this.h * 0.25);
-    if (textWidth(this.word) > this.w * 0.72)
-      textSize((textSize() * this.w * 0.72) / textWidth(this.word));
-    text(this.word, 0, 0);
+    textFont("Arial");
+    textStyle(BOLDITALIC);
+    textSize(this.h * 0.24);
+    if (textWidth(this.word) > this.w * 0.7)
+      textSize((textSize() * this.w * 0.7) / textWidth(this.word));
+    text(this.word, -this.w * 0.035, 0);
     this.drawDetails();
   }
 
   drawDetails() {
+    textStyle(NORMAL);
     textFont("monospace");
     textSize(max(10, this.h * 0.055));
-    text("SELF / " + String(this.number).padStart(3, "0"), 0, -this.h * 0.3);
-    const y = -this.h * 0.16;
-    triangle(-5, y, 5, y, 0, y - 8);
+    text("ME-MARRT / OFFER " + String(this.number).padStart(3, "0"), 0, -this.h * 0.3);
     this.drawClickHint();
   }
 
@@ -2511,22 +2169,23 @@ class WarningSignal {
     fill("#090203");
     textStyle(BOLD);
     textSize(14);
-    text("CLICK TO CHANGE", 0, this.h * 0.23 + 12.5);
+    text("CLICK TO UPGRADE", 0, this.h * 0.23 + 12.5);
   }
 
-  // Rotate the mouse back into the panel's coordinates, then test the six-sided outline.
+  // Rotate the mouse back into the price tag; the pointed end narrows toward its tip.
   hit(x, y) {
     if (millis() < this.born) return false;
     const dx = x - this.x;
     const dy = y - this.y;
-    const localX = abs(dx * cos(this.angle) + dy * sin(this.angle));
+    const localX = dx * cos(this.angle) + dy * sin(this.angle);
     const localY = abs(-dx * sin(this.angle) + dy * cos(this.angle));
-    return localY <= this.h / 2 && localX <= this.w / 2 - (localY * this.w * 0.32) / this.h;
+    const rightEdge = this.w / 2 - (localY * this.w * 0.34) / this.h;
+    return localY <= this.h / 2 && localX >= -this.w / 2 && localX <= rightEdge;
   }
 }
 
 function drawSignalConnections() {
-  stroke(238, 39, 36, 100);
+  stroke(8, 124, 255, 55);
   strokeWeight(1);
   for (let i = 0; i < signals.length; i += 2) {
     const other = signals[(i + 3) % signals.length];
@@ -2534,20 +2193,10 @@ function drawSignalConnections() {
   }
 }
 
-function drawHazardBar(x, y, w) {
-  noStroke();
-  fill("#FFFF00");
-  rect(x, y, w, 16);
-  fill(0);
-  for (let offset = 0; offset < w - 16; offset += 28) {
-    quad(x + offset, y + 16, x + offset + 14, y + 16, x + offset + 30, y, x + offset + 16, y);
-  }
-}
-
 // Draw two narrow alert ribbons above the signs, leaving the melt visible between them.
 function drawSignalTickers() {
   drawAlertTicker(ALERT_MESSAGE, 48, 92, "#FFFF00", "#090203");
-  drawAlertTicker(LOOP_MESSAGE, 1000, -72, "#EE2724", "#090203");
+  drawAlertTicker(LOOP_MESSAGE, 1000, -72, "#087CFF", "#FFF6DF");
 }
 
 // Repeat one measured phrase: modulo wraps it smoothly without a blank gap.
@@ -2567,12 +2216,12 @@ function drawAlertTicker(message, y, speed, paperColour, inkColour) {
   pop();
 }
 
-// A short click tears the signals themselves; the original melt continues underneath.
+// A click slips the printed image downward while the catalogue keeps spreading.
 function drawSignalGlitch() {
   if (millis() >= signalGlitchUntil) return;
   for (let i = 0; i < 12; i++) {
     const y = random(150, 1000);
-    copy(0, y, W, 10, random(-70, 70), y + random(-14, 14), W, 10);
+    copy(0, y, W, 10, random(-10, 10), y + random(8, 40), W, 10);
   }
 }
 
@@ -2581,19 +2230,25 @@ function meltSignalImage(signal) {
   const y = constrain(floor(signal.y - signal.h / 2 - 12), 0, H - 1);
   const w = min(signal.w + 24, W - x);
   const h = min(signal.h + 24, H - y);
-  const fragment = get(x, y, w, h).canvas;
-  datamosh.fieldCtx.drawImage(fragment, x / 2, y / 2, w / 2, h / 2);
-  datamosh.textureCtx.drawImage(datamosh.field, 0, 0);
-  datamosh.addRegion(
-    { x: (x + w / 2) / 2, y: (y + h / 2) / 2, radius: w * 0.4, born: datamosh.time },
-    70,
-  );
+  datamosh.absorb(get(x, y, w, h), x / 2, y / 2, w / 2, h / 2);
 }
 
-// 9. IDENTITY ERASURE — P5 SHAPES AND TORN PHOTOGRAPH STRIPS
-// The error belongs to the person: the shop keeps running around an empty human shape.
-// The original datamosh remains underneath. These new layers use p5 graphics and images.
-let identitySilhouette, identitySource;
+function drawRetailReturn() {
+  const progress = constrain(1 - (returnEnd - millis()) / 1900, 0, 1);
+  noStroke();
+  fill("#087CFF");
+  for (let x = 0; x < W; x += 28) rect(x, 0, 5 + (x % 9), H * progress);
+  textFont("Arial");
+  textStyle(BOLDITALIC);
+  textAlign(CENTER, CENTER);
+  textSize(80);
+  fill("#FFFF00");
+  text("BACK FOR MORE?", W / 2, H / 2);
+}
+
+// 9. PRODUCT IDENTITY — THE SHOPPER BECOMES THE THINGS THEY BUY
+// The body is a masked collage of the actual collected products; its ink drips into a barcode.
+let identityMask, identitySilhouette, identitySource;
 let identityShards = [];
 let identityDamage = 0;
 const PERSON_POINTS = [
@@ -2621,31 +2276,46 @@ function randomSignalX(width, side) {
 }
 
 function setupIdentityError() {
-  if (identitySilhouette) identitySilhouette.remove();
-  identitySilhouette = createGraphics(440, 800);
-  identitySilhouette.pixelDensity(1);
-  drawMissingPerson();
+  if (identityMask) identityMask.remove();
+  identityMask = createGraphics(440, 800);
+  identityMask.pixelDensity(1);
+  drawProductMask();
+  identitySilhouette = makeProductPerson();
   identitySource = get();
   identityShards = [];
   identityDamage = 0;
-  addIdentityShards(W / 2, H / 2, 24);
 }
 
-function drawMissingPerson() {
-  const picture = identitySilhouette;
+function drawProductMask() {
+  const picture = identityMask;
   picture.clear();
-  picture.fill("#050005");
-  picture.stroke("#FFFF00");
-  picture.strokeWeight(3);
+  picture.noStroke();
+  picture.fill("#FFFFFF");
   picture.ellipse(220, 90, 122, 146);
   picture.beginShape();
   for (const point of PERSON_POINTS) picture.vertex(point[0], point[1]);
   picture.endShape(CLOSE);
 }
 
+function makeProductPerson() {
+  const sheet = createGraphics(440, 800);
+  sheet.pixelDensity(1);
+  for (let row = 0; row < 10; row++) {
+    for (let column = 0; column < 4; column++) {
+      const card = datamosh.cards[(row + column) % datamosh.cards.length];
+      sheet.image(card, column * 110, row * 80, 110, 83);
+    }
+  }
+  const person = sheet.get();
+  person.mask(identityMask.get());
+  sheet.remove();
+  return person;
+}
+
 function drawIdentityError() {
   push();
   drawIdentityGhostType();
+  drawIdentityBackdrop();
   drawIdentityShards();
   drawIdentitySilhouette();
   drawIdentityReadout();
@@ -2653,7 +2323,7 @@ function drawIdentityError() {
   pop();
 }
 
-// Reassemble the person from offset strips, so even the empty space seems to tear and melt.
+// Reassemble the product-person from slipping strips, like printed ink losing its registration.
 function drawIdentitySilhouette() {
   const time = (millis() - signalStartedAt) / 1000;
   const strength = 4 + min(identityDamage, 10) * 2;
@@ -2674,40 +2344,60 @@ function identityStripDrop(time, y) {
 }
 
 function drawIdentityGhostType() {
-  textFont("Impact");
-  textStyle(NORMAL);
+  textFont("Arial");
+  textStyle(BOLDITALIC);
   textAlign(LEFT, TOP);
-  textSize(180);
+  textSize(160);
   noFill();
-  stroke(255, 255, 0, 150);
+  stroke("#EE2724");
   strokeWeight(2);
-  text("YOU", 90, 125);
-  text("HERE", 1400, 780);
+  text("MORE", 65, 135);
+  text("AGAIN", 1210, 780);
+}
+
+// Echo the landing page's yellow display circle: the person is now the displayed product.
+function drawIdentityBackdrop() {
+  noStroke();
+  fill("#087CFF");
+  ellipse(W / 2 + 9, 552, 632, 632);
+  fill("#FFFF00");
+  ellipse(W / 2, 543, 620, 620);
 }
 
 function drawIdentityReadout() {
   noStroke();
-  fill("#FFFF00");
+  fill("#FFF6DF");
+  rect(W / 2 - 180, 454, 360, 122);
+  fill("#087CFF");
   textAlign(CENTER, TOP);
-  textFont("Impact");
-  textSize(55);
-  textLeading(57);
-  text("NO\nONE\nINSIDE", W / 2, 450);
+  textFont("Arial");
+  textStyle(BOLDITALIC);
+  textSize(84);
+  text(identityDamage > 2 ? "SOLD" : "YOU", W / 2, 466);
   textFont("monospace");
   textSize(15);
-  text("STILL BUYING.", W / 2, 800);
-  text("USER REMOVED / CART STILL ACTIVE", W / 2, 956);
+  text("100% MATERIAL. 0% YOU.", W / 2, 550);
 }
 
 function drawIdentityScan() {
-  const y = 170 + ((((millis() - signalStartedAt) / 1000) * 160) % 745);
-  stroke("#FFFF00");
-  strokeWeight(1);
-  line(W / 2 - 245, y, W / 2 + 245, y);
   noStroke();
-  fill("#EE2724");
-  rect(W / 2 - 250, y - 4, 18, 8);
-  rect(W / 2 + 232, y - 4, 18, 8);
+  fill("#087CFF");
+  for (let x = 0; x < 300; x += 7) {
+    const length = 65 + (x % 23) * 2 + min(identityDamage, 8) * 12;
+    rect(W / 2 - 150 + x, 810, 2 + (x % 3), length);
+  }
+  drawIdentityFooter();
+}
+
+function drawIdentityFooter() {
+  fill("#FFF6DF");
+  rect(W / 2 - 180, 949, 360, 36);
+  fill("#087CFF");
+  textFont("monospace");
+  textStyle(BOLD);
+  textSize(17);
+  textAlign(CENTER, TOP);
+  text("YOU ARE THE PRODUCT.", W / 2, 958);
 }
 
 function burstIdentity(x, y) {
@@ -2760,7 +2450,7 @@ class IdentityShard {
     rotate(this.angle);
     this.drawFragment();
     noFill();
-    stroke("#FFFF00");
+    stroke("#087CFF");
     strokeWeight(1);
     rect(-this.w / 2, -this.h / 2, this.w, this.h);
     pop();

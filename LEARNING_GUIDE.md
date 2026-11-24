@@ -9,7 +9,7 @@ This guide links the scene interactions to the topics in the supplied class sche
 3. **`draw()`** runs repeatedly. It updates positions, then draws the current picture.
 4. Mouse functions change the state when the visitor clicks or drags.
 
-All code is in **`sketch.js`**, with ten numbered section comments. Start with sections 1–4 and 6 for the basic scenes. Read the advanced `FrameArt` and `ChallengeDatamosh` classes in sections 5 and 7 afterwards. Section 8 contains the warnings and alert ribbons; section 9 draws the missing-person ending with p5 graphics, image slices and a small fragment class. Section 10 handles direct file opens before images and sounds are requested.
+All code is in **`sketch.js`**, with ten numbered section comments. Start with sections 1–4 and 6 for the basic scenes. Read the retained `FrameArt` tracking class in section 5 and the p5 `ConsumptionMelt` image-feedback class in section 7 afterwards. Section 8 contains the sale labels and promotion ribbons; section 9 draws the product-person ending with p5 graphics, image slices and a small fragment class. Section 10 handles direct file opens before images and sounds are requested.
 
 `IS_CHALLENGE` checks whether the current HTML has the challenge stage. The single `preload()`, `setup()` and `draw()` callbacks use an `if` statement to call `preloadLanding()` / `preloadChallenge()`, `setupLanding()` / `setupChallenge()` and `drawLanding()` / `drawChallenge()`. The input callbacks use the same idea. Each page starts its own p5 sketch, so only that scene loads its images and sounds.
 
@@ -23,7 +23,7 @@ Both HTML pages load the same `sketch.js` after the p5.js and p5.sound CDN libra
 | Boolean values, equality and `if`/`else`   | Conditions decide whether an object hit an edge, the mouse is over an item, or the challenge should change stage.                                                                                      |
 | Random numbers, rounding and array indices | Random numbers choose clothing variants. A random array selection picks a colour or phrase. p5's `floor()` rounds a number down, like JavaScript's `Math.floor()`, so it can identify one array entry. |
 | Incrementing and loops                     | A loop draws every item or several glitch strips. Adding speed to position moves an object a little each frame.                                                                                        |
-| Arrays                                     | Lists hold falling products, messages and warning signals. Adding another entry lets the program create more of them.                                                                                  |
+| Arrays                                     | Lists hold falling products, messages and sale labels. Adding another entry lets the program create more of them.                                                                                      |
 | Functions                                  | Named steps such as drawing, moving or playing a sound keep repeated code in one place.                                                                                                                |
 | Objects, classes, properties and methods   | One item stores its own position, size and speed. Its methods update or draw that item. A class creates several items with the same structure.                                                         |
 | Drawing and colour                         | `rect()`, `ellipse()`, `line()`, shapes and text make the interface. Fill and stroke colours use the project's bright palette.                                                                         |
@@ -41,7 +41,7 @@ These are examples of how the schedule's ideas apply. They are not a claim that 
 - **`loopEffect(name, volume)`** repeats a background sound.
 - **`stopSounds()`** stops playback when leaving a page.
 
-The p5.sound addon handles audio playback. `MeltBeatClock` reads its playhead so the restored melting effect follows the recording's cue times; it does not analyse new beats or schedule audio through a custom Web Audio engine.
+The p5.sound addon handles audio playback. `MeltBeatClock` reads its playhead so the printed ink flow follows the recording's cue times; it does not analyse new beats or schedule audio through a custom Web Audio engine.
 
 ## How the effects work
 
@@ -51,11 +51,11 @@ The p5.sound addon handles audio playback. `MeltBeatClock` reads its playhead so
 
 **Messages and tracking:** `FrameArt` draws message sprites and samples the existing product images for coloured tracking patches. The points jitter and connect with lines. This advanced visual effect is decorative; it does not use a camera or machine-learning tracker.
 
-**Melting:** `ChallengeDatamosh` keeps copies of the picture on hidden canvases. It recolours pixels, moves small fragments and stretches strips downward. The next frame reuses the damaged picture, so the melt keeps building. This advanced image effect simulates datamoshing; it does not corrupt a video file.
+**Consumption melt:** each catch adds its kind to `collectedItems`. `makeCatalogueCard()` draws that same product on a p5 graphics buffer. `ConsumptionMelt` stamps these cards near a click and later spreads them across a loose grid. A second graphics buffer stores the previous frame; image crops stretch its ink downward without changing the RGB channels. `mark()` records occupied grid cells so the ending begins once purchases have filled enough of the image.
 
-**Warning field:** `WarningSignal` stores each red hexagon's position, size, angle and word. A loop draws the signals in an array. `scatter()` chooses a random target; `update()` moves the position and angle a little toward it each frame. `hit()` checks the mouse against the hexagon. A click adds more signals, tears a few image strips and sends the touched area into the existing melting effect. Yellow stripes use rectangles and a loop. Hovering pauses a sign; its yellow label and pulsing outline make the interaction visible. `drawAlertTicker()` repeats a text string in a loop, using remainder (`%`) to wrap the scrolling position.
+**Sale labels:** `SaleLabel` stores position, size, angle and offer text. `scatter()` chooses random targets. `hit()` rotates the mouse position back into the price tag. The front label pauses on hover; clicking it prints more and starts the return timer only once. `drawAlertTicker()` uses text width, a loop and remainder (`%`) to repeat the promotions continuously.
 
-**Identity erasure:** `createGraphics()` draws an empty human silhouette with an ellipse and polygon. A loop draws it as thin image strips. Clicking increases the strip offsets and falling distance; remainder (`%`) wraps the falling strips. `IdentityShard` gives captured pieces of the picture position, speed, rotation and a limited lifetime. The pieces are capped at 80.
+**Product identity:** `createGraphics()` draws a human mask with an ellipse and a polygon. A second sheet repeats the actual collected products; `mask()` keeps only the human shape. A loop draws it in thin strips. Upgrades increase their falling distance and barcode length, and an `if` changes **YOU** to **SOLD** after three clicks. `IdentityShard` animates captured pieces with speed, rotation and a limited lifetime.
 
 **Time:** `millis()` gives the time since the sketch started. Comparing it with a saved start time lets the artwork wait before returning to the store. It uses the same basic idea as comparing two numbers in an `if` statement.
 
@@ -78,22 +78,22 @@ The p5.sound addon handles audio playback. `MeltBeatClock` reads its playhead so
 | `Product.update()` and `Product.show()`                                        | Adds speed to position, or moves a caught item toward the cart; then draws its shape.                          |
 | `drawShirt()`, `drawBook()`, `drawBottle()`, `drawHeadphones()`, `drawPlant()` | Builds products from p5 shapes and coordinates.                                                                |
 | `drawWords()`                                                                  | Updates a small label's position and upward/downward speed inside a loop.                                      |
-| `WarningSignal.show()` and `WarningSignal.hit()` in section 8                  | Draws a hexagon and checks whether the mouse touches its shape.                                                |
+| `SaleLabel.show()` and `SaleLabel.hit()` in section 8                          | Draws a sale tag and checks whether the mouse touches its actual outline.                                      |
 | `activateSignal()` and `beginReturn()`                                         | Saves a deadline using `millis()`: 12 seconds after the first signal is touched, then a 1.9-second transition. |
 
 ## Advanced visual sections
 
 These are additional techniques used to keep the detailed visual effects. They should be described as extensions, rather than claiming every line comes from the class topics.
 
-| Class and method                                                      | What it adds                                                                                                    |
-| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `FrameArt.heatmapFor()` and `FrameArt.colorizeHeatmap()` in section 5 | Reads image pixels and maps brightness to bright colours. A cache avoids repeating that pixel work every frame. |
-| `FrameArt.trackImage()` and `FrameArt.drawTrackingLinks()`            | Samples patches from the products, draws jittering tracking boxes and joins points into a web.                  |
-| `FrameArt.drawMessages()` and `FrameArt.glitchMessage()`              | Draws cached bubble images and splits them into offset strips when dismissed.                                   |
-| `ChallengeDatamosh.prepareTexture()` in section 7                     | Builds the colourful source texture by changing pixel channels.                                                 |
-| `ChallengeDatamosh.addDamage()` and `ChallengeDatamosh.draw()`        | Adds damage at a clicked position, then keeps transporting fragments and stretching melting ribbons.            |
+| Class and method                                                             | What it adds                                                                                                    |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `FrameArt.heatmapFor()` and `FrameArt.colorizeHeatmap()` in section 5        | Reads image pixels and maps brightness to bright colours. A cache avoids repeating that pixel work every frame. |
+| `FrameArt.trackImage()` and `FrameArt.drawTrackingLinks()`                   | Samples patches from the products, draws jittering tracking boxes and joins points into a web.                  |
+| `FrameArt.drawMessages()` and `FrameArt.glitchMessage()`                     | Draws cached bubble images and splits them into offset strips when dismissed.                                   |
+| `ConsumptionMelt.stamp()` and `ConsumptionMelt.stretchRibbon()` in section 7 | Draws selected goods as print textures, then stretches their own pixels downward.                               |
+| `ConsumptionMelt.addDamage()` and `ConsumptionMelt.draw()`                   | Adds a local print cluster, updates coverage and displays the spreading catalogue.                              |
 
-The advanced code uses the browser's Canvas 2D API, including `drawImage()`, pixel data, hidden canvases and clipping. It also uses image caches and extra data structures. These are browser capabilities, so they add no separate runtime library.
+The preserved landing tracking uses native Canvas 2D, image caches, pixel data and clipping. The redesigned consumption melt uses p5 `createGraphics()` and `image()`; the product-person also uses p5 image masks. These image techniques extend the basic drawing examples without adding another runtime library.
 
 ## Explain one interaction
 

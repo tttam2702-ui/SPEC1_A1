@@ -1,6 +1,6 @@
 # ME-MARRT — Identity Superstore
 
-An interactive artwork about shopping, identity and **SDG 12: Responsible Consumption and Production**. Objects promise a better version of you. Collecting them eventually turns the store into a melting image and a generative field of repeating identity warnings.
+An interactive artwork about shopping, identity and **SDG 12: Responsible Consumption and Production**. Objects promise a better version of you. Collecting them eventually turns the store into an overflowing catalogue that turns the shopper into a product.
 
 - **Author:** Tran Thanh Tam — s3977954
 - **Group:** SCP_067
@@ -29,38 +29,42 @@ Use the server instead of opening `index.html` or `challenge.html` with `file://
 The p5 drawing surfaces are **1920 × 1080 pixels** with `pixelDensity(1)`. The website scales the complete 16:9 image to fit the window without stretching or cropping it. Other screen proportions can show dark margins. Use **FULL SCREEN** in the navigation bar, or the browser's fullscreen command; press **Esc** to leave fullscreen.
 
 - **Landing — `index.html`:** drag the product cutouts, click message bubbles and watch the changing outfit. Press **R** to drop the products again or **S** to save a PNG. The main button opens the challenge directly.
-- **Challenge — `challenge.html`:** read the instructions, then start. Click falling objects to put them in the cart. After six catches, clicks make areas of the picture melt. Keep clicking until red hexagonal signals appear over the melting picture. Touch a signal to tear the image and multiply the warnings. The first touch starts a 12-second wait before the 1.9-second glitch return. While the canvas is focused, **Enter** catches an item, melts an area or activates the **ME?** signal. **PAUSE** and **RESTART** are available before the warning-field ending.
+- **Challenge — `challenge.html`:** read the instructions, then start. Click falling objects to put them in the cart. After six catches, clicks make areas of the picture melt. Keep clicking as the collected objects spread into a melting catalogue. Sale labels appear around a person made from those same goods. Click **CLICK TO UPGRADE** to print more, dissolve the person into barcode strips and eventually change **YOU** to **SOLD**. The first touch starts a 12-second wait before the 1.9-second glitch return. While the canvas is focused, **Enter** catches an item, melts an area or activates the first sale label. **PAUSE** and **RESTART** are available before the product-identity ending.
 - **Both pages:** **ABOUT** shows the project statement and credits.
 
 The offers are fictional. No purchase takes place. The ending contains moving glitch imagery and sound.
 
 ## Read the code
 
-The product movement, outfit changes, collection and warning signals use basic p5 drawing, conditions, loops, arrays and classes. The `FrameArt` and `ChallengeDatamosh` sections retain the detailed tracking and datamosh effects. They use p5's `drawingContext` and native Canvas 2D image processing beyond the topics shown in the class schedule. The project has two pages and uses no physics library.
+The product movement, outfit changes, collection and sale labels use p5 drawing, conditions, loops, arrays and classes. `ConsumptionMelt` uses p5 graphics buffers and image crops to stretch the printed artwork. The landing's preserved `FrameArt` tracking class still uses native Canvas 2D pixel processing beyond the supplied class topics. The project has two pages and uses no physics library.
 
 All application code is in **`sketch.js`**. The two HTML pages load the same file. One set of p5 hooks (`preload`, `setup`, `draw` and input callbacks) checks `IS_CHALLENGE` and runs the appropriate scene. Shared navigation and About are created with p5 DOM helpers during `setup()`.
 
 The numbered comments in `sketch.js` mark these sections:
 
-| Section                                | Purpose                                                            |
-| -------------------------------------- | ------------------------------------------------------------------ |
-| 1. Shared canvas and sound             | Screen size, palette, backgrounds and sound functions.             |
-| 2. p5 lifecycle and input              | Routes the p5 callbacks to landing or challenge.                   |
-| 3. Shared navigation and About         | Navigation, fullscreen and project credits.                        |
-| 4. Landing scene                       | Falling images, dragging, outfit, head and passing cart.           |
-| 5. Tracking and message artwork        | `FrameArt`: image tracking, bubbles and connecting lines.          |
-| 6. Challenge scene                     | Catching items, challenge stages and the return timer.             |
-| 7. Datamosh image feedback             | `ChallengeDatamosh`: the preserved melting engine.                 |
-| 8. Generative warning signs and alerts | Moving hexagons, click cues and scrolling ribbons.                 |
-| 9. Identity erasure                    | A human-shaped void, falling strips and bursts of image fragments. |
-| 10. Startup recovery                   | Direct file opens show instructions before media loading.          |
+| Section                                 | Purpose                                                                        |
+| --------------------------------------- | ------------------------------------------------------------------------------ |
+| 1. Shared canvas and sound              | Screen size, palette, backgrounds and sound functions.                         |
+| 2. p5 lifecycle and input               | Routes the p5 callbacks to landing or challenge.                               |
+| 3. Shared navigation and About          | Navigation, fullscreen and project credits.                                    |
+| 4. Landing scene                        | Falling images, dragging, outfit, head and passing cart.                       |
+| 5. Tracking and message artwork         | `FrameArt`: image tracking, bubbles and connecting lines.                      |
+| 6. Challenge scene                      | Catching items, challenge stages and the return timer.                         |
+| 7. Consumption melt                     | `ConsumptionMelt`: collected goods become spreading, melting catalogue prints. |
+| 8. Sale labels and scrolling promotions | Moving price tags, click cues and retail promotion ribbons.                    |
+| 9. Product identity                     | A shopper made from collected goods dissolves into a barcode.                  |
+| 10. Startup recovery                    | Direct file opens show instructions before media loading.                      |
 
 `index.html` and `challenge.html` remain the browser entry points. The CSS files control page fitting and the HTML overlays. There are no other local `.js` files or inline JavaScript handlers.
-Start with [LEARNING_GUIDE.md](LEARNING_GUIDE.md). It separates the class-level interaction code from the two advanced visual sections and explains how they connect. [AI_ASSISTANCE.md](AI_ASSISTANCE.md) explains the AI assistance and revisions openly.
+Start with [LEARNING_GUIDE.md](LEARNING_GUIDE.md). It separates the class-level interaction code from the image effects and explains how they connect. [AI_ASSISTANCE.md](AI_ASSISTANCE.md) explains the AI assistance and revisions openly.
 
-## The warning-field ending
+## The consumption ending
 
-The original datamosh stays visible and keeps melting across the whole background. A human-shaped empty space tears and breaks into falling strips in the middle. Red and black hexagons appear at random positions on either side, with varied sizes and angles. Each signal moves toward new random points on its own rhythm; yellow hazard stripes and thin connecting lines move with them. The labels **MORE**, **AGAIN**, **ME?** and **NOT YET** connect the image to the pressure to keep buying a new identity. Every sign has a pulsing outline and a yellow **CLICK TO CHANGE** label. Hovering turns it yellow and holds it still for clicking. Two alert ribbons scroll in opposite directions above the scene. A touch breaks the image briefly, sends the touched area into the existing melt, creates more signs and throws pieces of the current picture outward. Each click increases the distortion of the empty person. The figure is made from p5 shapes; no new illustration or external image was added. The visible signals are capped at 32 and image fragments at 80.
+The distortion uses the objects actually caught during this round. Their drawings become red/blue catalogue prints on pink, cream and yellow stock. Clicking adds local print clusters and downward ink smears; continued buying makes the catalogue spread across the remaining space. The recording's cue times increase the ink flow. Colours stay within ME-MARRT's retail palette; there are no random RGB inversions.
+
+The ending echoes the landing's yellow display circle. Inside it, a human silhouette is filled with the collected products. Each **CLICK TO UPGRADE** adds offers and makes the figure slip into barcode strips. After three upgrades, **YOU** becomes **SOLD**. The first upgrade starts the 12-second countdown, followed by a 1.9-second barcode return asking **BACK FOR MORE?** The loop connects the spectacle to the project statement: consumption gradually replaces the person.
+
+There are at most 32 interactive labels, 72 ink ribbons and 80 loose image fragments. The body uses p5 shapes and a mask; no extra illustration, downloaded visual asset or new runtime library was added.
 
 ## Licences and credits
 
