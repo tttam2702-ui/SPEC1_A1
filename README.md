@@ -24,6 +24,8 @@ Visit **http://localhost:8000/index.html**. Use a modern desktop browser. Any or
 
 Use the server instead of opening `index.html` or `challenge.html` with `file://`: the browser needs to load images and sounds. Direct file opens now show a help screen with a live-site link and server instructions instead of entering asset preload. Sound begins after a visitor interacts with the page.
 
+Leaving a page mutes the master output, stops every loaded clip and suspends its audio context. The return transition keeps its sound until navigation, then all challenge audio ends. Hidden tabs stop playback and wait for another interaction before sound can resume.
+
 ## Display and interaction
 
 The p5 drawing surfaces are **1920 × 1080 pixels** with `pixelDensity(1)`. The website scales the complete 16:9 image to fit the window without stretching or cropping it. Other screen proportions can show dark margins. Use **FULL SCREEN** in the navigation bar, or the browser's fullscreen command; press **Esc** to leave fullscreen.

@@ -35,6 +35,7 @@ const SOUND_PATHS = {
 };
 let aboutOpen = false;
 let soundReady = false;
+let audioExiting = false;
 let projectSounds = {};
 let soundNames = [];
 
@@ -84,26 +85,64 @@ function soundMissing() {
 
 function playEffect(name, volume = 0.4) {
   let sound = projectSounds[name];
-  if (!soundReady || !sound || !sound.isLoaded()) return;
+  if (audioExiting || !soundReady || !sound || !sound.isLoaded()) return;
+  if (name === "notification") stopSound(name);
   sound.setVolume(volume);
-  if (name === "notification") sound.stop();
   sound.play();
 }
 
 function loopEffect(name, volume = 0.07) {
   let sound = projectSounds[name];
-  if (!soundReady || !sound || !sound.isLoaded() || sound.isPlaying()) return;
+  if (audioExiting || !soundReady || !sound || !sound.isLoaded() || sound.isPlaying()) return;
   sound.setVolume(volume);
   sound.loop();
 }
 
 function stopSounds() {
-  soundNames.forEach((name) => projectSounds[name].stop());
+  soundNames.forEach(stopSound);
+}
+
+// Mute each file first; one failed stop must not leave the remaining clips playing.
+function stopSound(name) {
+  const sound = projectSounds[name];
+  if (!sound) return;
+  try {
+    sound.setVolume(0);
+    sound.stop();
+  } catch (error) {
+    console.warn("Could not stop sound:", name, error);
+  }
+}
+
+// Navigation is terminal: block new playback and silence the whole audio context.
+function shutdownSounds() {
+  audioExiting = true;
+  soundReady = false;
+  if (typeof masterVolume === "function") masterVolume(0);
+  stopSounds();
+  if (typeof getAudioContext !== "function") return;
+  const context = getAudioContext();
+  if (context.state !== "closed") context.suspend().catch(console.warn);
+}
+
+function silenceHiddenPage() {
+  if (!document.hidden) return;
+  soundReady = false;
+  stopSounds();
+}
+
+// A page restored by Back waits for a fresh gesture before becoming audible.
+function restorePageAudio(event) {
+  if (!event.persisted) return;
+  audioExiting = false;
+  soundReady = false;
 }
 
 // Only a real input starts audio, so waiting on the landing page never queues pops.
 function enableSounds() {
-  if (OPENED_AS_FILE || soundReady || typeof userStartAudio !== "function") return;
+  if (OPENED_AS_FILE || audioExiting || document.hidden || soundReady) return;
+  if (typeof userStartAudio !== "function") return;
+  if (typeof masterVolume === "function") masterVolume(1);
   userStartAudio();
   soundReady = true;
 }
@@ -111,8 +150,10 @@ function enableSounds() {
 window.addEventListener("pointerdown", enableSounds);
 window.addEventListener("keydown", enableSounds);
 
-// Navigation ends a page's sounds, including the quiet datamosh loop.
-window.addEventListener("pagehide", stopSounds);
+// Hidden tabs cannot keep the challenge audio playing behind the landing page.
+document.addEventListener("visibilitychange", silenceHiddenPage);
+window.addEventListener("pagehide", shutdownSounds);
+window.addEventListener("pageshow", restorePageAudio);
 
 // 2. P5 LIFECYCLE AND INPUT
 
@@ -138,7 +179,7 @@ function setup() {
 }
 
 function draw() {
-  if (OPENED_AS_FILE) return;
+  if (OPENED_AS_FILE || audioExiting) return;
   if (IS_CHALLENGE) drawChallenge();
   else drawLanding();
 }
@@ -279,7 +320,7 @@ function bindSiteControls() {
   fullscreenButton.hidden = !document.fullscreenEnabled;
   document.addEventListener("fullscreenchange", fullscreenLabel);
   document.addEventListener("keydown", closeAboutWithEscape);
-  select(".site-home").elt.onclick = stopSounds;
+  select(".site-home").elt.onclick = shutdownSounds;
 }
 
 function toggleAbout() {
@@ -1716,7 +1757,7 @@ function drawReturn() {
   image(meltPicture, 0, 0, W, H);
   drawRetailReturn();
   if (millis() >= returnEnd) {
-    stopSounds();
+    shutdownSounds();
     location.href = "./";
   }
 }
