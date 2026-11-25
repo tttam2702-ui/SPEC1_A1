@@ -25,13 +25,13 @@ const W = 1920;
 const H = 1080;
 const PALETTE = ["#087CFF", "#FF2396", "#FFFF00", "#EE2724", "#00E000", "#FFF6DF"];
 const SOUND_PATHS = {
-  pop: "sounds/pop.wav",
-  item: "sounds/challenge_click.wav",
-  start: "sounds/game-start.ogg",
-  datamosh: "sounds/datamosh.wav",
-  notification: "sounds/notification_end.wav",
-  ok: "sounds/ok_click.ogg",
-  transition: "sounds/transition.wav",
+  pop: "sounds/COMM2754-26t3-A1-s3977954_TranThanhTam_Message_Pop.wav",
+  item: "sounds/COMM2754-26t3-A1-s3977954_TranThanhTam_Challenge_Click.wav",
+  start: "sounds/COMM2754-26t3-A1-s3977954_TranThanhTam_Game_Start.wav",
+  datamosh: "sounds/COMM2754-26t3-A1-s3977954_TranThanhTam_Datamosh.wav",
+  notification: "sounds/COMM2754-26t3-A1-s3977954_TranThanhTam_Notification_Appear.wav",
+  ok: "sounds/COMM2754-26t3-A1-s3977954_TranThanhTam_End_Click.wav",
+  transition: "sounds/COMM2754-26t3-A1-s3977954_TranThanhTam_Transition.wav",
 };
 let aboutOpen = false;
 let soundReady = false;

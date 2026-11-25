@@ -26,6 +26,8 @@ Use the server instead of opening `index.html` or `challenge.html` with `file://
 
 Leaving a page mutes the master output, stops every loaded clip and suspends its audio context. The return transition keeps its sound until navigation, then all challenge audio ends. Hidden tabs stop playback and wait for another interaction before sound can resume.
 
+[Sound element concepts](SOUND_ELEMENTS.md) lists the seven current WAV recordings, their full submission filenames, waveform images and intended impact.
+
 ## Display and interaction
 
 The p5 drawing surfaces are **1920 × 1080 pixels** with `pixelDensity(1)`. The website scales the complete 16:9 image to fit the window without stretching or cropping it. Other screen proportions can show dark margins. Use **FULL SCREEN** in the navigation bar, or the browser's fullscreen command; press **Esc** to leave fullscreen.
