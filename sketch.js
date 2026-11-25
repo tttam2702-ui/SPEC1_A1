@@ -243,15 +243,16 @@ const SITE_ABOUT_HTML = `
           <div>
             <dt>Group members</dt>
             <dd><ul class="about-members">
-              <li>Tran Thanh Tam</li>
-              <li>Phan Bao Nhu Minh</li>
-              <li>Nguyen Thanh Hoai Anh</li>
-              <li>Nguyen Hoang Quynh Anh</li>
+              <li>Tran Thanh Tam - s3977954</li>
+              <li>Nguyen Hoang Quynh Anh - s4184957</li>
+              <li>Nguyen Thanh Hoai Anh - s4025916</li>
+              <li>Phan Nhu Bao Minh - s4112912</li>
+              <li>Dang Tri Nhan - s4012968</li>
             </ul></dd>
           </div>
           <div>
             <dt>Course</dt>
-            <dd>COMM2754 - Digital Media Specialisation - 26t3</dd>
+            <dd>COMM2754 - Digital Media Specialisation 2 - 26t3</dd>
           </div>
           <div>
             <dt>Affiliation</dt>

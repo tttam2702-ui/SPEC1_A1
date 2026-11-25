@@ -4,7 +4,7 @@ An interactive artwork about shopping, identity and **SDG 12: Responsible Consum
 
 - **Author:** Tran Thanh Tam — s3977954
 - **Group:** SCP_067
-- **Course:** COMM2754 — Digital Media Specialisation — 26t3
+- **Course:** COMM2754 — Digital Media Specialisation 2 — 26t3
 - **Institution:** RMIT University Vietnam, Saigon South Campus, School of Communication and Design, Digital Media Program
 - **Project date:** 19 November 2026
 
